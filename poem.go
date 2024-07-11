@@ -13,15 +13,6 @@ type Poem struct {
 	Length int
 }
 
-var m = Poem{
-	"Test Poem",
-	"Somebody",
-	"something",
-	9,
-}
-
-var m2 Poem
-
 func poem2json(poem Poem, name string) error {
 	// Marshal to JSON bytes
 	poem_bytes, err := json.Marshal(poem)
