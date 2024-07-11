@@ -17,3 +17,7 @@ go.work.sum
 
 # env file
 .env
+
+# Test JSON files
+poems.json
+test_poem.json
