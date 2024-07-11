@@ -13,7 +13,7 @@ type Poem struct {
 	Length int
 }
 
-func poem2json(poem Poem, name string) error {
+func poem2json(poem Poem, filename string) error {
 	// Marshal to JSON bytes
 	poem_bytes, err := json.Marshal(poem)
 	if err != nil {
@@ -21,7 +21,7 @@ func poem2json(poem Poem, name string) error {
 		return err
 	}
 	// Write file
-	err = os.WriteFile(name, poem_bytes, 0666)
+	err = os.WriteFile(filename, poem_bytes, 0666)
 	if err != nil {
 		log.Fatal(err)
 		return err
@@ -29,10 +29,10 @@ func poem2json(poem Poem, name string) error {
 	return nil
 }
 
-func json2poem(name string) (Poem, error) {
+func json2poem(filename string) (Poem, error) {
 	// Read the file name
 	var poem Poem
-	file_bytes, err := os.ReadFile(name)
+	file_bytes, err := os.ReadFile(filename)
 	if err != nil {
 		log.Fatal(err)
 		return poem, err
