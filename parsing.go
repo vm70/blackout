@@ -74,15 +74,10 @@ func downloadPoems(filename string) error {
 		if hashErr != nil {
 			return hashErr
 		}
-		file, createErr := os.Create(filename)
-		if createErr != nil {
-			return createErr
-		}
-		_, writeErr := io.WriteString(file, string(body))
+		writeErr := os.WriteFile(filename, body, 0666)
 		if writeErr != nil {
 			return writeErr
 		}
-		defer file.Close()
 		return nil
 	}
 	return fileErr
