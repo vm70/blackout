@@ -58,7 +58,7 @@ func downloadPoems(filename string) error {
 	_, fileErr := os.Stat(filename)
 	if fileErr == nil {
 		log.Printf("File already exists at %s\n", filename)
-		return poemsFileHashMatches(filename)
+		return nil
 	}
 	if errors.Is(fileErr, os.ErrNotExist) {
 		log.Println("Downloading poem dataset")
@@ -88,22 +88,15 @@ func splitPoems(poems []Poem, poemFolder string) error {
 	if os.IsNotExist(folderErr) {
 		log.Printf("Creating poem folder %s\n", poemFolder)
 		os.Mkdir(poemFolder, 0750)
-	} else if os.IsExist(folderErr) {
-		log.Printf("Poem folder %s already exists\n", poemFolder)
 	} else {
-		return folderErr
+		log.Printf("Poem folder %s already exists\n", poemFolder)
+		return nil
 	}
-
 	for idx, poem := range poems {
 		poemJson := filepath.Join(poemFolder, "poem"+fmt.Sprintf("%d", idx)+".json")
-		_, fileErr := os.Stat(poemJson)
-		if os.IsNotExist(fileErr) {
-			poemErr := poem2json(poem, poemJson)
-			if poemErr != nil {
-				return poemErr
-			}
-		} else if !os.IsExist(fileErr) {
-			return fileErr
+		poemErr := poem2json(poem, poemJson)
+		if poemErr != nil {
+			return poemErr
 		}
 	}
 	return nil
