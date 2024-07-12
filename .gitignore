@@ -21,3 +21,4 @@ go.work.sum
 # Test JSON files
 poems.json
 test_poem.json
+poem_folder/*.json
