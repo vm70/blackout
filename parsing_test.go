@@ -21,5 +21,8 @@ func TestReadPoemDB(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	splitPoems(poems, "poem_folder")
+	err = splitPoems(poems, "poem_folder")
+	if err != nil {
+		t.Fail()
+	}
 }
