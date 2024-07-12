@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-  "encoding/csv"
 	"github.com/adrg/xdg"
 )
 
@@ -83,17 +82,6 @@ func downloadPoems(filename string) error {
 	return fileErr
 }
 
-func writeLengths(lengths []string, poemFolder string) error {
-  lengthsFile := filepath.Join(poemFolder, "lengths.csv")
-  file, csvErr := os.Create(lengthsFile)
-  if csvErr != nil {
-    return csvErr
-  }
-  var lengthsRecord = [][]string{lengths}
-  w := csv.NewWriter(file)
-  writeErr := w.WriteAll(lengthsRecord)
-  return writeErr
-}
 
 func splitPoems(poems []Poem, poemFolder string) error {
 	_, folderErr := os.Stat(poemFolder)
