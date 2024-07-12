@@ -89,16 +89,27 @@ func downloadPoems(filename string) error {
 }
 
 func splitPoems(poems []Poem, poemFolder string) error {
-	_, err := os.Stat(poemFolder)
-	if os.IsNotExist(err) {
+	_, folderErr := os.Stat(poemFolder)
+	if os.IsNotExist(folderErr) {
+		log.Printf("Creating poem folder %s\n", poemFolder)
 		os.Mkdir(poemFolder, 0750)
-	} else if !os.IsExist(err) {
-		return err
+	} else if os.IsExist(folderErr) {
+		log.Printf("Poem folder %s already exists\n", poemFolder)
+	} else {
+		return folderErr
 	}
 
 	for idx, poem := range poems {
-		poem.Length = len(poem.Text)
-		poem2json(poem, filepath.Join(poemFolder, "poem"+fmt.Sprintf("%d", idx)+".json"))
+		poemJson := filepath.Join(poemFolder, "poem"+fmt.Sprintf("%d", idx)+".json")
+		_, fileErr := os.Stat(poemJson)
+		if os.IsNotExist(fileErr) {
+			poemErr := poem2json(poem, poemJson)
+			if poemErr != nil {
+				return poemErr
+			}
+		} else if !os.IsExist(fileErr) {
+			return fileErr
+		}
 	}
 	return nil
 }
