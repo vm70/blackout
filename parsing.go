@@ -6,49 +6,70 @@ import (
 	"fmt"
 	"github.com/adrg/xdg"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 )
 
-const poems_json = "https://huggingface.co/datasets/DanFosing/public-domain-poetry/resolve/main/poems.json"
+const poemsJson = "https://huggingface.co/datasets/DanFosing/public-domain-poetry/resolve/main/poems.json"
 
-var poems_location = filepath.Join(xdg.DataHome, "blackout")
+var dataFolder = filepath.Join(xdg.DataHome, "blackout")
 
 var poems_sha256 = [32]byte{0x17, 0x2c, 0xd2, 0xc5, 0xd9, 0x53, 0xc7, 0x02, 0x33, 0x90, 0xa8, 0xd1, 0xf3, 0x37, 0xd0, 0x23, 0xd7, 0xfb, 0xb2, 0xb9, 0x25, 0xdf, 0x0a, 0x66, 0xd0, 0x22, 0x1f, 0x30, 0xc6, 0xad, 0xc3, 0x08}
 
+func poemsFileHashMatches(filename string) error {
+	content, readErr := os.ReadFile(filename)
+	if readErr != nil {
+		return readErr
+	}
+	return poemsBytesHashMatches(content)
+}
+
+func poemsBytesHashMatches(fileBytes []byte) error {
+	resp_sum := sha256.Sum256(fileBytes)
+	if resp_sum != poems_sha256 {
+		errorStr := fmt.Sprintf("Hash %x doesn't match reference %x", resp_sum, resp_sum)
+		return errors.New(errorStr)
+	}
+	return nil
+}
+
 func downloadPoems(filename string) error {
 	// Check if file exists
-	_, err := os.Stat(filename)
-	if err == nil {
-		// Do nothing if the file already has been downloaded
-		return nil
-	} else if errors.Is(err, os.ErrNotExist) {
-		// Download the poem dataset
-		resp, err := http.Get(poems_json)
-		if err != nil {
-			return err
+	_, fileErr := os.Stat(filename)
+	if fileErr == nil {
+		log.Printf("File already exists at %s\n", filename)
+    return poemsFileHashMatches(filename)
+	}
+	if errors.Is(fileErr, os.ErrNotExist) {
+		log.Println("Downloading poem dataset")
+		resp, getErr := http.Get(poemsJson)
+		if getErr != nil {
+			return getErr
 		}
-		body, err := io.ReadAll(resp.Body)
-
-		// Check SHA256 sum
-		resp_sum := sha256.Sum256(body)
-		if resp_sum != poems_sha256 {
-			error_str := fmt.Sprintf("Hash %x doesn't match reference %x", resp_sum, resp_sum)
-			return errors.New(error_str)
+		body, readErr := io.ReadAll(resp.Body)
+		if readErr != nil {
+			return readErr
 		}
-
-		// Create local file
-		file, err := os.Create(filename)
-		if err != nil {
-			return err
+		hashErr := poemsBytesHashMatches(body)
+		if hashErr != nil {
+			return hashErr
+		}
+		file, createErr := os.Create(filename)
+		if createErr != nil {
+			return createErr
+		}
+		_, writeErr := io.WriteString(file, string(body))
+		if writeErr != nil {
+			return writeErr
 		}
 		defer file.Close()
-
-		// Write to the local file
-		_, err = io.WriteString(file, string(body))
-		return err
-	} else {
-		return err
+		return nil
 	}
+	return fileErr
+}
+
+func splitPoems(poemsJson string, poemsFolder string) {
+
 }
