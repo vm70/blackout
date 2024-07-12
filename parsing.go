@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-
+  "encoding/csv"
 	"github.com/adrg/xdg"
 )
 
@@ -83,6 +83,18 @@ func downloadPoems(filename string) error {
 	return fileErr
 }
 
+func writeLengths(lengths []string, poemFolder string) error {
+  lengthsFile := filepath.Join(poemFolder, "lengths.csv")
+  file, csvErr := os.Create(lengthsFile)
+  if csvErr != nil {
+    return csvErr
+  }
+  var lengthsRecord = [][]string{lengths}
+  w := csv.NewWriter(file)
+  writeErr := w.WriteAll(lengthsRecord)
+  return writeErr
+}
+
 func splitPoems(poems []Poem, poemFolder string) error {
 	_, folderErr := os.Stat(poemFolder)
 	if os.IsNotExist(folderErr) {
@@ -92,12 +104,14 @@ func splitPoems(poems []Poem, poemFolder string) error {
 		log.Printf("Poem folder %s already exists\n", poemFolder)
 		return nil
 	}
+  var lengths = []string{}
 	for idx, poem := range poems {
+    lengths = append(lengths, fmt.Sprintf("%d", len(poem.Text)))
 		poemJson := filepath.Join(poemFolder, "poem"+fmt.Sprintf("%d", idx)+".json")
 		poemErr := poem2json(poem, poemJson)
 		if poemErr != nil {
 			return poemErr
 		}
 	}
-	return nil
+  return writeLengths(lengths, poemFolder)  
 }
