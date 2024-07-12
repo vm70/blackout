@@ -10,7 +10,6 @@ type Poem struct {
 	Title  string
 	Author string
 	Text   string
-	Length int
 }
 
 func poem2json(poem Poem, filename string) error {
