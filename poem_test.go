@@ -3,7 +3,7 @@ package main
 import "testing"
 
 func TestPoemRoundTrip(t *testing.T) {
-	testPoem := Poem{"Test Poem", "Somebody", "something", 9}
+	testPoem := Poem{"Test Poem", "Somebody", "something"}
 	testPoemFilename := "test_poem.json"
 	err := poem2json(testPoem, testPoemFilename)
 	if err != nil {
