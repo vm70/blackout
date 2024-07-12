@@ -2,14 +2,16 @@ package main
 
 import (
 	"crypto/sha256"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/adrg/xdg"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/adrg/xdg"
 )
 
 const poemsJson = "https://huggingface.co/datasets/DanFosing/public-domain-poetry/resolve/main/poems.json"
@@ -35,12 +37,28 @@ func poemsBytesHashMatches(fileBytes []byte) error {
 	return nil
 }
 
+func readPoemDB(poemDB string) ([]Poem, error) {
+	// Read the file name
+	var poemArr []Poem
+	fileBytes, err := os.ReadFile(poemDB)
+	if err != nil {
+		return poemArr, err
+	}
+	// parse JSON and return poem
+	err = json.Unmarshal(fileBytes, &poemArr)
+	if err != nil {
+		log.Fatal(err)
+		return poemArr, err
+	}
+	return poemArr, nil
+}
+
 func downloadPoems(filename string) error {
 	// Check if file exists
 	_, fileErr := os.Stat(filename)
 	if fileErr == nil {
 		log.Printf("File already exists at %s\n", filename)
-    return poemsFileHashMatches(filename)
+		return poemsFileHashMatches(filename)
 	}
 	if errors.Is(fileErr, os.ErrNotExist) {
 		log.Println("Downloading poem dataset")
@@ -70,6 +88,17 @@ func downloadPoems(filename string) error {
 	return fileErr
 }
 
-func splitPoems(poemsJson string, poemsFolder string) {
+func splitPoems(poems []Poem, poemFolder string) error {
+	_, err := os.Stat(poemFolder)
+	if os.IsNotExist(err) {
+		os.Mkdir(poemFolder, 0750)
+	} else if !os.IsExist(err) {
+		return err
+	}
 
+	for idx, poem := range poems {
+		poem.Length = len(poem.Text)
+		poem2json(poem, filepath.Join(poemFolder, "poem"+fmt.Sprintf("%d", idx)+".json"))
+	}
+	return nil
 }
