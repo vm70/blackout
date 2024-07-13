@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"log"
 	"path/filepath"
 	"regexp"
@@ -11,8 +12,9 @@ var numCPU = runtime.NumCPU()
 
 const searchFailure = -1
 
-var idChannel = make(chan int, numCPU)
-var quitChannel = make(chan bool, numCPU)
+var found = make(chan int, numCPU)
+var failed = make(chan bool, numCPU)
+var stop = make(chan bool, numCPU)
 
 func searchPoemFolder(poemFolder string, rp *regexp.Regexp, maxLength int) (int, error) {
 	lengths, lengthsErr := getLengths(poemFolder)
@@ -20,16 +22,33 @@ func searchPoemFolder(poemFolder string, rp *regexp.Regexp, maxLength int) (int,
 		return searchFailure, lengthsErr
 	}
 	for idx := 0; idx < numCPU; idx++ {
-		log.Printf("Dispatching search goroutine #%d\n", idx)
+		log.Printf("Starting search goroutine #%d\n", idx)
 		go searchingRoutine(idx, poemFolder, rp, lengths, maxLength)
 	}
-	return <-idChannel, nil
+	var nFailed = 0
+	for {
+		select {
+		case poemID := <-found:
+			log.Printf("Received poem ID %d to black out\n", poemID)
+			for idx := 0; idx < numCPU; idx++ {
+				stop <- true
+			}
+			return poemID, nil
+		case <-failed:
+			nFailed += 1
+			if nFailed == numCPU {
+				searchErr := errors.New("Failed to find a blackout poem")
+				return searchFailure, searchErr
+			}
+		}
+	}
 }
 
 func searchingRoutine(routineID int, poemFolder string, rp *regexp.Regexp, lengths []int, maxLength int) {
 	for poemID := routineID; poemID < len(lengths); poemID += numCPU {
 		select {
-		case <-quitChannel:
+		case <-stop:
+			log.Printf("Goroutine %d stopped\n", routineID)
 			return
 		default:
 			log.Printf("Goroutine %d Checking Poem #%d\n", routineID, poemID)
@@ -40,15 +59,13 @@ func searchingRoutine(routineID int, poemFolder string, rp *regexp.Regexp, lengt
 			}
 			if doable {
 				log.Printf("Goroutine %d found poem %d to black out\n", routineID, poemID)
-				idChannel <- poemID
-				close(idChannel)
-				for idx := 0; idx < numCPU; idx++ {
-					quitChannel <- true
-				}
-				return
+				found <- poemID
+				log.Printf("Goroutine %d stopping", routineID)
+				close(found)
 			}
 		}
 	}
+	failed <- true
 }
 
 func canBlackout(rp *regexp.Regexp, poemFolder string, poemID int, poemLength int, maxLength int) (bool, error) {
