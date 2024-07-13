@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+  "strconv"
 )
 
 const poemsJson = "https://huggingface.co/datasets/DanFosing/public-domain-poetry/resolve/main/poems.json"
@@ -82,6 +83,10 @@ func downloadPoems(filename string) error {
 	return fileErr
 }
 
+func poemFilename(poemID int) string {
+  return "poem"+strconv.Itoa(poemID)+".json"
+}
+
 func splitPoems(poems []Poem, poemFolder string) error {
 	_, folderErr := os.Stat(poemFolder)
 	if os.IsNotExist(folderErr) {
@@ -94,7 +99,7 @@ func splitPoems(poems []Poem, poemFolder string) error {
 	var lengths = []string{}
 	for idx, poem := range poems {
 		lengths = append(lengths, fmt.Sprintf("%d", len(poem.Text)))
-		poemJson := filepath.Join(poemFolder, "poem"+fmt.Sprintf("%d", idx)+".json")
+		poemJson := filepath.Join(poemFolder, poemFilename(idx))
 		poemErr := poem2json(poem, poemJson)
 		if poemErr != nil {
 			return poemErr
@@ -103,14 +108,19 @@ func splitPoems(poems []Poem, poemFolder string) error {
 	return writeLengths(lengths, poemFolder)
 }
 
-func readPoemFolder(poemFolder string) error {
-	log.Printf("Reading poem folder %s\n", poemFolder)
-	entries, err := os.ReadDir(poemFolder)
-	if err != nil {
-		return err
-	}
-	for _, entry := range entries {
-		log.Printf("Reading %s\n", entry.Name())
-	}
-	return nil
-}
+// func readPoemFolder(poemFolder string) ( []Poem, []int, error  ){
+// 	log.Printf("Reading poem folder %s\n", poemFolder)
+// 	var poems []Poem
+//   lengths, lengthsErr := getLengths(poemFolder)
+//   if lengthsErr != nil {
+//     return poems, lengths, lengthsErr
+//   }
+//   for idx, _ := range lengths {
+//     poem, poemErr := json2poem(filepath.Join(poemFolder, poemFilename(idx)))
+//     if poemErr != nil {
+//       return poems, lengths, poemErr
+//     }
+//     poems = append(poems, poem)
+//   }
+//   return poems, lengths, nil
+// }
