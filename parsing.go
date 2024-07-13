@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/adrg/xdg"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
-	"github.com/adrg/xdg"
 )
 
 const poemsJson = "https://huggingface.co/datasets/DanFosing/public-domain-poetry/resolve/main/poems.json"
@@ -82,7 +82,6 @@ func downloadPoems(filename string) error {
 	return fileErr
 }
 
-
 func splitPoems(poems []Poem, poemFolder string) error {
 	_, folderErr := os.Stat(poemFolder)
 	if os.IsNotExist(folderErr) {
@@ -92,14 +91,26 @@ func splitPoems(poems []Poem, poemFolder string) error {
 		log.Printf("Poem folder %s already exists\n", poemFolder)
 		return nil
 	}
-  var lengths = []string{}
+	var lengths = []string{}
 	for idx, poem := range poems {
-    lengths = append(lengths, fmt.Sprintf("%d", len(poem.Text)))
+		lengths = append(lengths, fmt.Sprintf("%d", len(poem.Text)))
 		poemJson := filepath.Join(poemFolder, "poem"+fmt.Sprintf("%d", idx)+".json")
 		poemErr := poem2json(poem, poemJson)
 		if poemErr != nil {
 			return poemErr
 		}
 	}
-  return writeLengths(lengths, poemFolder)  
+	return writeLengths(lengths, poemFolder)
+}
+
+func readPoemFolder(poemFolder string) error {
+	log.Printf("Reading poem folder %s\n", poemFolder)
+	entries, err := os.ReadDir(poemFolder)
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		log.Printf("Reading %s\n", entry.Name())
+	}
+	return nil
 }
