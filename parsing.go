@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-  "strconv"
+	"strconv"
 )
 
 const poemsJson = "https://huggingface.co/datasets/DanFosing/public-domain-poetry/resolve/main/poems.json"
@@ -84,7 +84,7 @@ func downloadPoems(filename string) error {
 }
 
 func poemFilename(poemID int) string {
-  return "poem"+strconv.Itoa(poemID)+".json"
+	return "poem" + strconv.Itoa(poemID) + ".json"
 }
 
 func splitPoems(poems []Poem, poemFolder string) error {
