@@ -5,25 +5,33 @@ import (
 	"testing"
 )
 
+const MaxUint = ^uint(0)
+const MinUint = 0
+const MaxInt = int(MaxUint >> 1)
+const MinInt = -MaxInt - 1
+
 func TestCanBlackout(t *testing.T) {
-	testPoem := Poem{"Test Poem", "Somebody", "something"}
-	testPoemLength := 9
-	goodRegexP, _ := regexp.Compile("thing")
-	badRegexP, _ := regexp.Compile("bad")
+	goodRegexP, _ := regexp.Compile("e")
+	badRegexP, _ := regexp.Compile("xxxxxx")
+	lengths, _ := getLengths("poem_folder")
 	// Check good regex with good length -> false
-	if canBlackout(goodRegexP, testPoem, testPoemLength, 999) != true {
+	goodRgoodL, err := canBlackout(goodRegexP, "poem_folder", 0, lengths[0], MaxInt)
+	if !(err == nil && goodRgoodL == true) {
 		t.Fail()
 	}
 	// Check good regex with bad length -> false
-	if canBlackout(goodRegexP, testPoem, testPoemLength, 1) != false {
+	goodRbadL, err := canBlackout(goodRegexP, "poem_folder", 0, lengths[0], 0)
+	if !(err == nil && goodRbadL == false) {
 		t.Fail()
 	}
 	// Check bad regex with good length -> false
-	if canBlackout(badRegexP, testPoem, testPoemLength, 999) != false {
+	badRgoodL, err := canBlackout(badRegexP, "poem_folder", 0, lengths[0], MaxInt)
+	if !(err == nil && badRgoodL == false) {
 		t.Fail()
 	}
 	// Check bad regex with bad length -> false
-	if canBlackout(badRegexP, testPoem, testPoemLength, 1) != false {
+	badRbadL, err := canBlackout(badRegexP, "poem_folder", 0, lengths[0], 0)
+	if !(err == nil && badRbadL == false) {
 		t.Fail()
 	}
 }
