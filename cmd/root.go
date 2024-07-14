@@ -46,7 +46,7 @@ var rootCmd = &cobra.Command{
 	Short:   "Make a blackout poem with the given hidden message",
 	Version: BlackoutVersion,
 	Args:    cobra.ExactArgs(1),
-	Run:     run,
+	Run:     runApp,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -65,7 +65,8 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&PrintOriginal, "print-original", "p", false, "print original poem before blacking out")
 }
 
-func run(cmd *cobra.Command, args []string) {
+// runApp runs the CLI application.
+func runApp(cmd *cobra.Command, args []string) {
 	if !Verbose {
 		log.SetOutput(io.Discard)
 	}
