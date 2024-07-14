@@ -14,3 +14,11 @@ func TestPoemRoundTrip(t *testing.T) {
 		t.Fatalf("Poems do not match")
 	}
 }
+
+func TestMessage2Regex(t *testing.T) {
+	testMessage := "blackoutpoem"
+	testRegex := `(?m)^(.*?)(b)(.*?)(l)(.*?)(a)(.*?)(c)(.*?)(k)(.*?)(o)(.*?)(u)(.*?)(t)(.*?)(p)(.*?)(o)(.*?)(e)(.*?)(m)(.*?)$`
+	if msg2regex(testMessage) != testRegex {
+		t.Fatalf("Regexes don't match: %s, %s", testRegex, msg2regex(testMessage))
+	}
+}

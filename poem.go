@@ -9,7 +9,10 @@ import (
 	"strings"
 )
 
-var blackoutRP = regexp.MustCompile(`[^\t\f\r\ ]`) 
+const regexEscapes = `.+*?()|[]{}^$`
+
+var blackoutRP = regexp.MustCompile(`[^\t\f\r\ ]`)
+
 type Poem struct {
 	Title  string
 	Author string
@@ -59,15 +62,29 @@ func blackout(poem Poem, rp *regexp.Regexp) (string, error) {
 		err := errors.New("Regex does not match blackout poem")
 		return "", err
 	}
-  groups := rp.FindStringSubmatch(delinatedPoem)
-  rebuiltPoem := ""
-  for idx, group := range groups[1:] {
-    if idx % 2 == 0 { 
-      blackedGroup := blackoutRP.ReplaceAllString(group, "█")
-      rebuiltPoem += blackedGroup
-    } else {
-      rebuiltPoem += group
-    }
-  }
+	groups := rp.FindStringSubmatch(delinatedPoem)
+	rebuiltPoem := ""
+	for idx, group := range groups[1:] {
+		if idx%2 == 0 {
+			blackedGroup := blackoutRP.ReplaceAllString(group, "█")
+			rebuiltPoem += blackedGroup
+		} else {
+			rebuiltPoem += group
+		}
+	}
 	return rebuiltPoem, nil
+}
+
+func msg2regex(message string) string {
+	regexString := "(?m)^"
+
+	for _, msgChar := range strings.Split(message, "") {
+		if strings.Contains(regexEscapes, msgChar) {
+			regexString += `(.*?)(\` + msgChar + `)`
+		} else {
+			regexString += `(.*?)(` + msgChar + `)`
+		}
+	}
+	regexString += "(.*?)$"
+	return regexString
 }
