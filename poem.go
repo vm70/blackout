@@ -7,6 +7,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"unicode"
 )
 
 const regexEscapes = `.+*?()|[]{}^$`
@@ -79,6 +80,9 @@ func msg2regex(message string) string {
 	regexString := "(?m)^"
 
 	for _, msgChar := range strings.Split(message, "") {
+		if unicode.IsSpace(rune(msgChar[0])) {
+			continue
+		}
 		if strings.Contains(regexEscapes, msgChar) {
 			regexString += `(.*?)(\` + msgChar + `)`
 		} else {
