@@ -15,7 +15,7 @@ limitations under the License.
 */
 package main
 
-import "blackout/cmd"
+import "github.com/vm70/blackout/cmd"
 
 func main() {
 	cmd.Execute()
