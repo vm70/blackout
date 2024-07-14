@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"log"
@@ -7,8 +7,10 @@ import (
 	"time"
 )
 
-var bpMessage = "blackout poem"
-var poemRP = regexp.MustCompile(msg2regex(bpMessage))
+var (
+	bpMessage = "blackout poem"
+	poemRP    = regexp.MustCompile(msg2regex(bpMessage))
+)
 
 func main_old() {
 	log.Printf("Data Folder is %s\n", dataFolder)
