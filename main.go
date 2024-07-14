@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-var poemRP = regexp.MustCompile(`(?m)^(.*?)(b)(.*?)(l)(.*?)(a)(.*?)(c)(.*?)(k)(.*?)(o)(.*?)(u)(.*?)(t)(.*?)(p)(.*?)(o)(.*?)(e)(.*?)(m)(.*?)$`)
+var poemRP = regexp.MustCompile(msg2regex("blackout poem"))
 
 func main() {
 	log.Printf("Data Folder is %s\n", dataFolder)
