@@ -32,11 +32,13 @@ import (
 const BlackoutVersion = "0.1.0"
 
 // Verbose determines whether to print verbose results.
-var Verbose bool
-// MaxLength determines the maximum poem length to black out.
-var MaxLength int
-// PrintOriginal determines whether to print the original poem before blacking it out.
-var PrintOriginal bool
+var (
+	Verbose bool
+	// MaxLength determines the maximum poem length to black out.
+	MaxLength int
+	// PrintOriginal determines whether to print the original poem before blacking it out.
+	PrintOriginal bool
+)
 
 // rootCmd represents the base command when called without any sub-commands.
 var rootCmd = &cobra.Command{
@@ -60,13 +62,13 @@ func Execute() {
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "V", false, "verbose output")
 	rootCmd.PersistentFlags().IntVarP(&MaxLength, "max-length", "l", 400, "maximum poem length")
-  rootCmd.PersistentFlags().BoolVarP(&PrintOriginal, "print-original", "p", false, "print original poem before blacking out")
+	rootCmd.PersistentFlags().BoolVarP(&PrintOriginal, "print-original", "p", false, "print original poem before blacking out")
 }
 
 func run(cmd *cobra.Command, args []string) {
-  if !Verbose {
-    log.SetOutput(io.Discard)
-  }
+	if !Verbose {
+		log.SetOutput(io.Discard)
+	}
 	log.Printf("Running %s\n", cmd.Name())
 	log.Printf("Data Folder is %s\n", dataFolder)
 	regexpString := msg2regex(args[0])
@@ -87,11 +89,12 @@ func run(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 	log.Printf("Poem ID %d is \"%s\"\n", poemID, poem.Title)
-  if Verbose {
-    time.Sleep(1 * time.Second)
-  }
-  if PrintOriginal {
-    PrintPoem(poem)
-  }
+	if Verbose {
+		time.Sleep(1 * time.Second)
+	}
+	if PrintOriginal {
+		PrintPoem(poem)
+		print("\n")
+	}
 	PrintBlackoutPoem(poem, args[0])
 }
