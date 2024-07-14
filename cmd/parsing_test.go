@@ -5,14 +5,14 @@ import (
 )
 
 func TestDownloadingPoems(t *testing.T) {
-	err := downloadPoems("poems.json")
+	err := downloadPoemsJSON("poems.json")
 	if err != nil {
 		t.Fail()
 	}
 }
 
 func TestReadPoemDB(t *testing.T) {
-	downloadPoems("poems.json")
+	downloadPoemsJSON("poems.json")
 	poems, err := readPoemsJSON("poems.json")
 	if err != nil {
 		t.Fail()

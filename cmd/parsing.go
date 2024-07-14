@@ -35,11 +35,16 @@ import (
 // poemsURL is the online URL where the public domain poetry database JSON file is stored.
 const poemsURL = "https://huggingface.co/datasets/DanFosing/public-domain-poetry/resolve/main/poems.json"
 
-// poemsSha256 is the SHA256 hash of the poem dataase JSON: `172cd2c5d953c7023390a8d1f337d023d7fbb2b925df0a66d0221f30c6adc308`.
-var poemsSha256 = [32]byte{0x17, 0x2c, 0xd2, 0xc5, 0xd9, 0x53, 0xc7, 0x02, 0x33, 0x90, 0xa8, 0xd1, 0xf3, 0x37, 0xd0, 0x23, 0xd7, 0xfb, 0xb2, 0xb9, 0x25, 0xdf, 0x0a, 0x66, 0xd0, 0x22, 0x1f, 0x30, 0xc6, 0xad, 0xc3, 0x08}
-
-// dataFolder is this program's data folder. On Linux systems, it would be `~/.local/share/blackout`.
-var dataFolder = filepath.Join(xdg.DataHome, "blackout")
+var (
+	// poemsSha256 is the SHA256 hash of the poem database JSON.
+	poemsSha256 = [32]byte{0x17, 0x2c, 0xd2, 0xc5, 0xd9, 0x53, 0xc7, 0x02, 0x33, 0x90, 0xa8, 0xd1, 0xf3, 0x37, 0xd0, 0x23, 0xd7, 0xfb, 0xb2, 0xb9, 0x25, 0xdf, 0x0a, 0x66, 0xd0, 0x22, 0x1f, 0x30, 0xc6, 0xad, 0xc3, 0x08}
+	// dataFolder is this program's data folder. On Linux systems, it would be `~/.local/share/blackout`.
+	dataFolder = filepath.Join(xdg.DataHome, "blackout")
+	// Location of the Poems JSON file in the data folder.
+	dataFolderJSON = filepath.Join(dataFolder, "poems.json")
+	// Location of the poems folder in the data folder.
+	dataFolderPoems = filepath.Join(dataFolder, "poems")
+)
 
 // poemsFileHashMatches returns an error if the given file's SHA256 hash doesn't match the hard-coded one above.
 func poemsFileHashMatches(filename string) error {
@@ -77,11 +82,12 @@ func readPoemsJSON(poemsJSON string) ([]Poem, error) {
 	return poemArr, nil
 }
 
-func downloadPoems(filename string) error {
+// downloadPoemsJSON downloads the poem JSON file and places it in the given path. If the poems JSON file already exists (from a previous run), then it returns nil.
+func downloadPoemsJSON(poemsJSON string) error {
 	// Check if file exists
-	_, fileErr := os.Stat(filename)
+	_, fileErr := os.Stat(poemsJSON)
 	if fileErr == nil {
-		log.Printf("File already exists at %s\n", filename)
+		log.Printf("File already exists at %s\n", poemsJSON)
 		return nil
 	}
 	if errors.Is(fileErr, os.ErrNotExist) {
@@ -98,7 +104,7 @@ func downloadPoems(filename string) error {
 		if hashErr != nil {
 			return hashErr
 		}
-		writeErr := os.WriteFile(filename, body, 0o666)
+		writeErr := os.WriteFile(poemsJSON, body, 0o666)
 		if writeErr != nil {
 			return writeErr
 		}
@@ -107,10 +113,12 @@ func downloadPoems(filename string) error {
 	return fileErr
 }
 
+// poemFilename returns the poem's file name by its ID.
 func poemFilename(poemID int) string {
 	return "poem" + strconv.Itoa(poemID) + ".json"
 }
 
+// Split an array of poems into JSON files in the poem folder.
 func splitPoems(poems []Poem, poemFolder string) error {
 	_, folderErr := os.Stat(poemFolder)
 	if os.IsNotExist(folderErr) {
@@ -130,4 +138,34 @@ func splitPoems(poems []Poem, poemFolder string) error {
 		}
 	}
 	return writeLengths(lengths, poemFolder)
+}
+
+// setupDataFolder sets up this CLI application's data folder.
+func setupDataFolder() error {
+	// Make the data folder if it doesn't already exist
+	_, folderErr := os.Stat(dataFolder)
+	if os.IsNotExist(folderErr) {
+		log.Printf("Creating data folder %s\n", dataFolder)
+		os.Mkdir(dataFolder, 0o750)
+	} else {
+		log.Printf("Data folder %s already exists\n", dataFolder)
+	}
+	// Download the poem database, and put it in the data folder
+	dlErr := downloadPoemsJSON(filepath.Join(dataFolder, "poems.json"))
+	if dlErr != nil {
+		return dlErr
+	}
+	// Populate the "poems" folder in the data folder if not already done
+	_, poemFolderErr := os.Stat(filepath.Join(dataFolder, "poems"))
+	if os.IsNotExist(poemFolderErr) {
+		poems, readErr := readPoemsJSON(filepath.Join(dataFolder, "poems.json"))
+		if readErr != nil {
+			return readErr
+		}
+		splitErr := splitPoems(poems, filepath.Join(dataFolder, "poems"))
+		if splitErr != nil {
+			return splitErr
+		}
+	}
+	return nil
 }
