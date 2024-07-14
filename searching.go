@@ -61,7 +61,7 @@ func searchingRoutine(routineID int, poemFolder string, rp *regexp.Regexp, lengt
 				log.Printf("Goroutine %d found poem %d to black out\n", routineID, poemID)
 				found <- poemID
 				log.Printf("Goroutine %d stopping", routineID)
-				close(found)
+        return
 			}
 		}
 	}
