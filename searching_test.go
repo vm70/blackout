@@ -35,9 +35,3 @@ func TestCanBlackout(t *testing.T) {
 		t.Fail()
 	}
 }
-
-// func TestSearchingRoutine(t *testing.T) {
-//   poems :=
-//   testRegexP := regexp.Compile("(.*?)(a)(.*?)(b)(.*?)(c)(.*?)")
-//   searchingRoutine(0, 1, testRegexP, poems, )
-// }
