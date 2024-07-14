@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"regexp"
@@ -12,7 +13,7 @@ import (
 
 const regexEscapes = `.+*?()|[]{}^$`
 
-var blackoutRP = regexp.MustCompile(`[^\t\f\r\ ]`)
+var blackoutRP = regexp.MustCompile(`[^\t\f\r\n\ ]`)
 
 type Poem struct {
 	Title  string
@@ -77,7 +78,7 @@ func blackout(poem Poem, rp *regexp.Regexp) (string, error) {
 }
 
 func msg2regex(message string) string {
-	regexString := "(?m)^"
+	regexString := "(?ms)^"
 
 	for _, msgChar := range strings.Split(message, "") {
 		if unicode.IsSpace(rune(msgChar[0])) {
@@ -91,4 +92,26 @@ func msg2regex(message string) string {
 	}
 	regexString += "(.*?)$"
 	return regexString
+}
+
+func printPoem(poem Poem) {
+  fmt.Printf("\"%s\" by %s\n\n", poem.Title, poem.Author)
+  lines := strings.Split(poem.Text, "\\n")
+  for _, line := range lines {
+    fmt.Println(line)
+  }
+}
+
+func printBlackoutPoem(poem Poem, rp *regexp.Regexp, message string) error {
+  bp, err := blackout(poem, rp)
+  if err != nil {
+    return err
+  }
+  lines := strings.Split(bp, "\n")
+  for _, line := range lines {
+    fmt.Println(line)
+  }
+  fmt.Println("\n" + message)
+  fmt.Printf("Excerpt of \"%s\" by %s\n\n", poem.Title, poem.Author)
+  return nil
 }
