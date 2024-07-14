@@ -10,7 +10,7 @@ import (
 var bpMessage = "blackout poem"
 var poemRP = regexp.MustCompile(msg2regex(bpMessage))
 
-func main() {
+func main_old() {
 	log.Printf("Data Folder is %s\n", dataFolder)
 	downloadPoems("poems.json")
 	dbPoems, err := readPoemDB("poems.json")
