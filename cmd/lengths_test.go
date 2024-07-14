@@ -6,7 +6,7 @@ import (
 )
 
 func TestGetLengths(t *testing.T) {
-	downloadPoems("poems.json")
+	downloadPoemsJSON("poems.json")
 	poems, _ := readPoemsJSON("poems.json")
 	splitPoems(poems, "poem_folder")
 	lengths, lengthsErr := getLengths("poem_folder")
