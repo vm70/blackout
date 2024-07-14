@@ -32,6 +32,9 @@ func main() {
 	log.Printf("Poem ID %d is \"%s\"\n", poemID, poem.Title)
   time.Sleep(1 * time.Second)
   blackoutPoem, err := blackout(poem, poemRP)
+	if err != nil {
+		log.Fatal(err)
+	}
   print(blackoutPoem)
   print("\n")
 }
