@@ -18,24 +18,32 @@ limitations under the License.
 package cmd
 
 import (
+	"log"
 	"os"
+	"path/filepath"
+	"regexp"
+	"time"
 
 	"github.com/spf13/cobra"
 )
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:   "blackout",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+// BlackoutVersion is the version number of `blackout`.
+const BlackoutVersion = "0.1.0"
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+// Verbose determines whether to print verbose results.
+var (
+	Verbose bool
+	// MaxLength determines the maximum poem length to black out.
+	MaxLength int
+)
+
+// rootCmd represents the base command when called without any sub-commands.
+var rootCmd = &cobra.Command{
+	Use:     "blackout <message>",
+	Short:   "Make a blackout poem with the given hidden message",
+	Version: BlackoutVersion,
+	Args:    cobra.ExactArgs(1),
+	Run:     run,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -47,14 +55,37 @@ func Execute() {
 	}
 }
 
+// init sets up the flags of the CLI application.
 func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
+	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "V", false, "verbose output")
+	rootCmd.PersistentFlags().IntVarP(&MaxLength, "max-length", "l", 400, "maximum poem length")
+}
 
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.blackout.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+func run(cmd *cobra.Command, args []string) {
+	log.Printf("Running %s\n", cmd.Name())
+	log.Printf("Data Folder is %s\n", dataFolder)
+	regexpString := msg2regex(args[0])
+	blackoutRegex := regexp.MustCompile(regexpString)
+	log.Printf("Message = %s\n", args[0])
+	log.Printf("Regex = %s\n", regexpString)
+	setupErr := setupDataFolder()
+	if setupErr != nil {
+		log.Fatalf(setupErr.Error())
+	}
+	poemID, err := searchPoemsFolder("poem_folder", blackoutRegex, MaxLength)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("Found poem ID %d to black out\n", poemID)
+	poem, err := json2poem(filepath.Join("poem_folder", poemFilename(poemID)))
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("Poem ID %d is \"%s\"\n", poemID, poem.Title)
+	time.Sleep(1 * time.Second)
+	print("\n\n\n")
+	PrintPoem(poem)
+	print("\n\n\n")
+	PrintBlackoutPoem(poem, args[0])
+	print("\n\n\n")
 }
