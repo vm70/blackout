@@ -43,12 +43,12 @@ var (
 // searchPoemsFolder searches the poems folder for poems smaller than the
 // maximum length that match the given blackout regex.
 func searchPoemsFolder(poemsFolder string, rp *regexp.Regexp, maxLength int) (int, error) {
-  // Get the lengths from the poems folder
+	// Get the lengths from the poems folder
 	lengths, lengthsErr := getLengths(poemsFolder)
 	if lengthsErr != nil {
 		return searchFailure, lengthsErr
 	}
-  // Dispatch the goroutines to search the poems in parallel
+	// Dispatch the goroutines to search the poems in parallel
 	for i := 0; i < numCPU; i++ {
 		log.Printf("Starting search goroutine #%d\n", i)
 		go searchEveryNPoems(i, poemsFolder, rp, lengths, maxLength)
