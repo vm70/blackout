@@ -16,9 +16,14 @@ func TestPoemRoundTrip(t *testing.T) {
 }
 
 func TestMessage2Regex(t *testing.T) {
-	testMessage := "blackoutpoem"
-	testRegex := `(?m)^(.*?)(b)(.*?)(l)(.*?)(a)(.*?)(c)(.*?)(k)(.*?)(o)(.*?)(u)(.*?)(t)(.*?)(p)(.*?)(o)(.*?)(e)(.*?)(m)(.*?)$`
-	if msg2regex(testMessage) != testRegex {
-		t.Fatalf("Regexes don't match: %s, %s", testRegex, msg2regex(testMessage))
+	testMessage1 := "blackoutpoem"
+	testMessage2 := "blackout poem"
+  testRegex1 := `(?m)^(.*?)(b)(.*?)(l)(.*?)(a)(.*?)(c)(.*?)(k)(.*?)(o)(.*?)(u)(.*?)(t)(.*?)(p)(.*?)(o)(.*?)(e)(.*?)(m)(.*?)$`
+  testRegex2 := `(?m)^(.*?)(b)(.*?)(l)(.*?)(a)(.*?)(c)(.*?)(k)(.*?)(o)(.*?)(u)(.*?)(t)(.*?)(p)(.*?)(o)(.*?)(e)(.*?)(m)(.*?)$`
+	if msg2regex(testMessage1) != testRegex1 {
+		t.Fatalf("Regexes don't match: %s, %s", testRegex1, msg2regex(testMessage1))
+	}
+	if msg2regex(testMessage2) != testRegex2 {
+		t.Fatalf("Regexes don't match: %s, %s", testRegex2, msg2regex(testMessage2))
 	}
 }
