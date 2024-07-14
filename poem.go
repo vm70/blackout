@@ -2,10 +2,14 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"os"
+	"regexp"
+	"strings"
 )
 
+var blackoutRP = regexp.MustCompile(`[^\t\f\r\ ]`) 
 type Poem struct {
 	Title  string
 	Author string
@@ -43,4 +47,27 @@ func json2poem(filename string) (Poem, error) {
 		return poem, err
 	}
 	return poem, err
+}
+
+func delineate(poem Poem) string {
+	return strings.Replace(poem.Text, "\\n", "\n", -1)
+}
+
+func blackout(poem Poem, rp *regexp.Regexp) (string, error) {
+	delinatedPoem := delineate(poem)
+	if !rp.MatchString(delinatedPoem) {
+		err := errors.New("Regex does not match blackout poem")
+		return "", err
+	}
+  groups := rp.FindStringSubmatch(delinatedPoem)
+  rebuiltPoem := ""
+  for idx, group := range groups[1:] {
+    if idx % 2 == 0 { 
+      blackedGroup := blackoutRP.ReplaceAllString(group, "█")
+      rebuiltPoem += blackedGroup
+    } else {
+      rebuiltPoem += group
+    }
+  }
+	return rebuiltPoem, nil
 }
