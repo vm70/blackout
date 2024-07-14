@@ -1,4 +1,4 @@
-module blackout
+module github.com/vm70/blackout
 
 go 1.22.5
 
