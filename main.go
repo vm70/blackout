@@ -7,7 +7,8 @@ import (
 	"time"
 )
 
-var poemRP = regexp.MustCompile(msg2regex("blackout poem"))
+var bpMessage = "blackout poem"
+var poemRP = regexp.MustCompile(msg2regex(bpMessage))
 
 func main() {
 	log.Printf("Data Folder is %s\n", dataFolder)
@@ -25,16 +26,15 @@ func main() {
 		log.Fatal(err)
 	}
 	log.Printf("Found poem ID %d to black out\n", poemID)
-  poem, err := json2poem(filepath.Join("poem_folder", poemFilename(poemID)))
+	poem, err := json2poem(filepath.Join("poem_folder", poemFilename(poemID)))
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Printf("Poem ID %d is \"%s\"\n", poemID, poem.Title)
-  time.Sleep(1 * time.Second)
-  blackoutPoem, err := blackout(poem, poemRP)
-	if err != nil {
-		log.Fatal(err)
-	}
-  print(blackoutPoem)
-  print("\n")
+	time.Sleep(1 * time.Second)
+	print("\n\n\n")
+	printPoem(poem)
+	print("\n\n\n")
+	printBlackoutPoem(poem, poemRP, bpMessage)
+	print("\n\n\n")
 }
