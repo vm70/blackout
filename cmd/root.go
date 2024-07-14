@@ -29,7 +29,7 @@ import (
 )
 
 // BlackoutVersion is the version number of `blackout`.
-const BlackoutVersion = "0.1.0"
+const BlackoutVersion = "0.1.2"
 
 // Verbose determines whether to print verbose results.
 var (
