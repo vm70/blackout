@@ -46,7 +46,7 @@ type Poem struct {
 
 // poem2json writes the Poem struct to the given JSON file path.
 func poem2json(poem Poem, jsonFile string) error {
-  // TODO Turn this into a method for `Poem`.
+	// TODO Turn this into a method for `Poem`.
 	// Marshal to JSON bytes
 	poemBytes, err := json.Marshal(poem)
 	if err != nil {
@@ -107,7 +107,7 @@ func buildBlackout(poem Poem, rp *regexp.Regexp) (string, error) {
 
 // msg2regex converts a blackout poem's message into a regex string for searching poems.
 func msg2regex(message string) string {
-	regexString := "(?ms)^"
+	regexString := `(?s)\A`
 
 	for _, msgChar := range strings.Split(message, "") {
 		if unicode.IsSpace(rune(msgChar[0])) {
@@ -119,15 +119,15 @@ func msg2regex(message string) string {
 			regexString += `(.*?)(` + msgChar + `)`
 		}
 	}
-	regexString += "(.*?)$"
+	regexString += `(.*?)\z`
 	return regexString
 }
 
 // PrintPoem prints the given (un-blacked-out) poem.
 func PrintPoem(poem Poem) {
-  // print title & author
+	// print title & author
 	fmt.Printf("\"%s\" by %s\n\n", poem.Title, poem.Author)
-  // print lines
+	// print lines
 	lines := strings.Split(poem.Text, "\\n")
 	for _, line := range lines {
 		fmt.Println(line)
@@ -136,22 +136,22 @@ func PrintPoem(poem Poem) {
 
 // PrintBlackoutPoem prints the given blackout poem from the given poem and hidden message.
 func PrintBlackoutPoem(poem Poem, message string) error {
-  // convert message to regex
-  regexString := msg2regex(message)
-  rp := regexp.MustCompile(regexString)
-  // build the blackout poem
+	// convert message to regex
+	regexString := msg2regex(message)
+	rp := regexp.MustCompile(regexString)
+	// build the blackout poem
 	bp, err := buildBlackout(poem, rp)
 	if err != nil {
 		return err
 	}
-  // print the blackout poem's lines
+	// print the blackout poem's lines
 	lines := strings.Split(bp, "\n")
 	for _, line := range lines {
 		fmt.Println(line)
 	}
-  // print the message
+	// print the message
 	fmt.Println("\n" + message)
-  // print the title & author
+	// print the title & author
 	fmt.Printf("Excerpt of \"%s\" by %s\n\n", poem.Title, poem.Author)
 	return nil
 }

@@ -18,8 +18,8 @@ func TestPoemRoundTrip(t *testing.T) {
 func TestMessage2Regex(t *testing.T) {
 	testMessage1 := "blackoutpoem"
 	testMessage2 := "blackout poem"
-	testRegex1 := `(?ms)^(.*?)(b)(.*?)(l)(.*?)(a)(.*?)(c)(.*?)(k)(.*?)(o)(.*?)(u)(.*?)(t)(.*?)(p)(.*?)(o)(.*?)(e)(.*?)(m)(.*?)$`
-	testRegex2 := `(?ms)^(.*?)(b)(.*?)(l)(.*?)(a)(.*?)(c)(.*?)(k)(.*?)(o)(.*?)(u)(.*?)(t)(.*?)(p)(.*?)(o)(.*?)(e)(.*?)(m)(.*?)$`
+	testRegex1 := `(?s)\A(.*?)(b)(.*?)(l)(.*?)(a)(.*?)(c)(.*?)(k)(.*?)(o)(.*?)(u)(.*?)(t)(.*?)(p)(.*?)(o)(.*?)(e)(.*?)(m)(.*?)\z`
+	testRegex2 := `(?s)\A(.*?)(b)(.*?)(l)(.*?)(a)(.*?)(c)(.*?)(k)(.*?)(o)(.*?)(u)(.*?)(t)(.*?)(p)(.*?)(o)(.*?)(e)(.*?)(m)(.*?)\z`
 	if msg2regex(testMessage1) != testRegex1 {
 		t.Fatalf("Regexes don't match: %s, %s", testRegex1, msg2regex(testMessage1))
 	}
