@@ -1,14 +1,16 @@
-package main
+package cmd
 
 import (
 	"regexp"
 	"testing"
 )
 
-const MaxUint = ^uint(0)
-const MinUint = 0
-const MaxInt = int(MaxUint >> 1)
-const MinInt = -MaxInt - 1
+const (
+	MaxUint = ^uint(0)
+	MinUint = 0
+	MaxInt  = int(MaxUint >> 1)
+	MinInt  = -MaxInt - 1
+)
 
 func TestCanBlackout(t *testing.T) {
 	goodRegexP, _ := regexp.Compile("e")
