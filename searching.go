@@ -77,5 +77,6 @@ func canBlackout(rp *regexp.Regexp, poemFolder string, poemID int, poemLength in
 	if err != nil {
 		return false, err
 	}
-	return rp.MatchString(poem.Text), nil
+  delineatedPoem := delineate(poem)
+	return rp.MatchString(delineatedPoem), nil
 }

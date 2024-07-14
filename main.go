@@ -2,10 +2,12 @@ package main
 
 import (
 	"log"
+	"path/filepath"
 	"regexp"
+	"time"
 )
 
-var blackoutRP, _ = regexp.Compile("(.*?)(b)(.*?)(l)(.*?)(a)(.*?)(c)(.*?)(k)(.*?)(o)(.*?)(u)(.*?)(t)(.*?)(p)(.*?)(o)(.*?)(e)(.*?)(m)(.*?)")
+var poemRP = regexp.MustCompile(`(?m)^(.*?)(b)(.*?)(l)(.*?)(a)(.*?)(c)(.*?)(k)(.*?)(o)(.*?)(u)(.*?)(t)(.*?)(p)(.*?)(o)(.*?)(e)(.*?)(m)(.*?)$`)
 
 func main() {
 	log.Printf("Data Folder is %s\n", dataFolder)
@@ -18,13 +20,18 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	poemID, err := searchPoemFolder("poem_folder", blackoutRP, 400)
+	poemID, err := searchPoemFolder("poem_folder", poemRP, 400)
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Printf("Found poem ID %d to black out\n", poemID)
-// 	for i := 0; i < 100; i++ {
-// 		log.Printf("Default %d\n", i)
-// 		time.Sleep(10 * time.Millisecond)
-// 	}
+  poem, err := json2poem(filepath.Join("poem_folder", poemFilename(poemID)))
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("Poem ID %d is \"%s\"\n", poemID, poem.Title)
+  time.Sleep(1 * time.Second)
+  blackoutPoem, err := blackout(poem, poemRP)
+  print(blackoutPoem)
+  print("\n")
 }
