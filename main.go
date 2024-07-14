@@ -1,40 +1,22 @@
+/*
+Copyright © 2024 Vincent Mercator <vmercator@protonmail.com>
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 package main
 
-import (
-	"log"
-	"path/filepath"
-	"regexp"
-	"time"
-)
-
-var bpMessage = "blackout poem"
-var poemRP = regexp.MustCompile(msg2regex(bpMessage))
+import "blackout/cmd"
 
 func main() {
-	log.Printf("Data Folder is %s\n", dataFolder)
-	downloadPoems("poems.json")
-	dbPoems, err := readPoemDB("poems.json")
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = splitPoems(dbPoems, "poem_folder")
-	if err != nil {
-		log.Fatal(err)
-	}
-	poemID, err := searchPoemFolder("poem_folder", poemRP, 400)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf("Found poem ID %d to black out\n", poemID)
-	poem, err := json2poem(filepath.Join("poem_folder", poemFilename(poemID)))
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf("Poem ID %d is \"%s\"\n", poemID, poem.Title)
-	time.Sleep(1 * time.Second)
-	print("\n\n\n")
-	printPoem(poem)
-	print("\n\n\n")
-	printBlackoutPoem(poem, poemRP, bpMessage)
-	print("\n\n\n")
+	cmd.Execute()
 }

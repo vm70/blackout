@@ -19,6 +19,6 @@ go.work.sum
 .env
 
 # Test JSON files
-poems.json
-test_poem.json
-poem_folder/*
+**/poems.json
+**/test_poem.json
+**/poem_folder/*

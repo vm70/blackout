@@ -1,16 +1,19 @@
-package main
+package cmd
 
 import (
 	"testing"
 )
 
 func TestDownloadingPoems(t *testing.T) {
-	downloadPoems("poems.json")
+	err := downloadPoemsJSON("poems.json")
+	if err != nil {
+		t.Fail()
+	}
 }
 
 func TestReadPoemDB(t *testing.T) {
-	downloadPoems("poems.json")
-	poems, err := readPoemDB("poems.json")
+	downloadPoemsJSON("poems.json")
+	poems, err := readPoemsJSON("poems.json")
 	if err != nil {
 		t.Fail()
 	}
