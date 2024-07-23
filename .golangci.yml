@@ -1,1 +1,23 @@
-
+linters:
+  enable:
+    # enabled by default
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    # disabled by default
+    - bodyclose
+    - canonicalheader
+    - funlen
+    - gochecksumtype
+    - goconst
+    - godot
+    - gofmt
+    - gofumpt
+    - goimports
+    - mnd
+    - nilerr
+    - revive
+    - sloglint
