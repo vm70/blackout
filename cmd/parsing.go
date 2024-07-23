@@ -91,6 +91,7 @@ func downloadPoemsJSON(poemsJSON string) error {
 		if readErr != nil {
 			return readErr
 		}
+		defer resp.Body.Close()
 		hashErr := poemsBytesHashMatches(body)
 		if hashErr != nil {
 			return hashErr
