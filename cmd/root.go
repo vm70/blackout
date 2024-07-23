@@ -28,9 +28,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// BlackoutVersion is the version number of `blackout`.
-const BlackoutVersion = "0.2.0"
-
 // Verbose determines whether to print verbose results.
 var (
 	Verbose bool
@@ -44,7 +41,7 @@ var (
 var rootCmd = &cobra.Command{
 	Use:     "blackout <message>",
 	Short:   "Make a blackout poem with the given hidden message",
-	Version: BlackoutVersion,
+	Version: Version,
 	Args:    cobra.ExactArgs(1),
 	Run:     runApp,
 }
