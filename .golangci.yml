@@ -21,3 +21,6 @@ linters:
     - nilerr
     - revive
     - sloglint
+linters-settings:
+  mnd:
+    ignored-functions: ["os.WriteFile", "os.Mkdir"]
