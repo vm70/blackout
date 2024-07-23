@@ -32,7 +32,7 @@ var (
 	// Verbose determines whether to print verbose results.
 	Verbose bool
 	// MaxLength determines the maximum poem length to black out.
-	MaxLength int
+	MaxLength = 400
 	// PrintOriginal determines whether to print the original poem before blacking it out.
 	PrintOriginal bool
 )
@@ -58,7 +58,7 @@ func Execute() {
 // init sets up the flags of the CLI application.
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "V", false, "verbose output")
-	rootCmd.PersistentFlags().IntVarP(&MaxLength, "max-length", "l", 400, "maximum poem length")
+	rootCmd.PersistentFlags().IntVarP(&MaxLength, "max-length", "l", MaxLength, "maximum poem length")
 	rootCmd.PersistentFlags().BoolVarP(&PrintOriginal, "print-original", "p", false, "print original poem before blacking out")
 }
 
