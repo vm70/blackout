@@ -6,8 +6,8 @@ repos:
       - id: prettier
         name: prettier
         description: Prettier is an opinionated code formatter.
-        language: node
-        entry: npx prettier --write --ignore-unknown .
+        language: system
+        entry: npx prettier --write --ignore-unknown
         types: [text]
       - id: golangci-lint-full
         name: golangci-lint-full
