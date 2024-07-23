@@ -29,7 +29,7 @@ import (
 )
 
 // BlackoutVersion is the version number of `blackout`.
-const BlackoutVersion = "0.1.2"
+const BlackoutVersion = "0.2.0"
 
 // Verbose determines whether to print verbose results.
 var (
@@ -80,12 +80,12 @@ func runApp(cmd *cobra.Command, args []string) {
 	if setupErr != nil {
 		log.Fatalf(setupErr.Error())
 	}
-	poemID, err := searchPoemsFolder("poem_folder", blackoutRegex, MaxLength)
+	poemID, err := searchPoemsFolder(dataFolderPoems, blackoutRegex, MaxLength)
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Printf("Found poem ID %d to black out\n", poemID)
-	poem, err := json2poem(filepath.Join("poem_folder", poemFilename(poemID)))
+	poem, err := json2poem(filepath.Join(dataFolderPoems, poemFilename(poemID)))
 	if err != nil {
 		log.Fatal(err)
 	}
