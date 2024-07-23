@@ -28,8 +28,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Verbose determines whether to print verbose results.
 var (
+	// Verbose determines whether to print verbose results.
 	Verbose bool
 	// MaxLength determines the maximum poem length to black out.
 	MaxLength int
@@ -94,5 +94,8 @@ func runApp(cmd *cobra.Command, args []string) {
 		PrintPoem(poem)
 		print("\n")
 	}
-	PrintBlackoutPoem(poem, args[0])
+	printErr := PrintBlackoutPoem(poem, args[0])
+	if printErr != nil {
+		log.Fatal(err)
+	}
 }
