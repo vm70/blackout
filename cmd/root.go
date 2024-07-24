@@ -66,6 +66,8 @@ func init() {
 func runApp(cmd *cobra.Command, args []string) {
 	if !Verbose {
 		log.SetOutput(io.Discard)
+	} else {
+		log.SetOutput(os.Stdout)
 	}
 	log.Printf("Running %s\n", cmd.Name())
 	log.Printf("Data Folder is %s\n", dataFolder)
