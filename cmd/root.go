@@ -23,18 +23,16 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"time"
 
 	"github.com/spf13/cobra"
 )
 
 var (
-	// Verbose determines whether to print verbose results.
-	Verbose bool
-	// MaxLength determines the maximum poem length to black out.
-	MaxLength = 400
-	// PrintOriginal determines whether to print the original poem before blacking it out.
-	PrintOriginal bool
+	Verbose       bool  // Whether to print verbose results.
+	MaxLength     = 400 // Maximum poem length to black out.
+	PrintOriginal bool  // Whether to print the original poem before blacking it out.
 )
 
 // rootCmd represents the base command when called without any sub-commands.
@@ -79,7 +77,8 @@ func runApp(cmd *cobra.Command, args []string) {
 	if setupErr != nil {
 		log.Fatalf(setupErr.Error())
 	}
-	poemID, err := searchPoemsFolder(dataFolderPoems, blackoutRegex, MaxLength)
+	sp := SearchParams{runtime.NumCPU(), dataFolderPoems, blackoutRegex, MaxLength}
+	poemID, err := searchPoemsFolder(sp)
 	if err != nil {
 		log.Fatal(err)
 	}

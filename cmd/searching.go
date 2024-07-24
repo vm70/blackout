@@ -22,93 +22,97 @@ import (
 	"log"
 	"path/filepath"
 	"regexp"
-	"runtime"
 )
-
-// number of CPUs that the host computer has.
-var numCPU = runtime.NumCPU()
 
 // default return value for when a searching function fails; the maximum integer value.
 const searchFailure = int(^uint(0) >> 1)
 
-var (
-	// Slice of channels for telling each goroutine the first (earliest in time) poem found.
-	foundFirst = make([]chan int, numCPU)
-	// Channel for sending poem IDs that match the given blackout regex.
-	found = make(chan int, numCPU)
-)
+// A SearchParams struct contains common information about the folder searching operation.
+type SearchParams struct {
+	NRoutines     int            // The number of goroutines to dispatch when searching.
+	PoemsFolder   string         // The file path to the poems folder.
+	RP            *regexp.Regexp // The blackout regex pointer.
+	MaxPoemLength int            // The maximum poem length [characters].
+}
 
-// searchPoemsFolder searches the poems folder for poems smaller than the
-// maximum length that match the given blackout regex.
-func searchPoemsFolder(poemsFolder string, rp *regexp.Regexp, maxLength int) (int, error) {
+// searchPoemsFolder searches the poems folder for poems smaller than the maximum length that match the given blackout regex.
+func searchPoemsFolder(sp SearchParams) (int, error) {
+	// Initialize important search parameters
+
+	// Channels that tell each goroutine the first poem ID found.
+	foundFirst := make([]chan int, sp.NRoutines)
+	for idx := 0; idx < sp.NRoutines; idx++ {
+		log.Printf("Initializing foundFirst channel %d\n", idx)
+		foundFirst[idx] = make(chan int, 1)
+	}
+	// Channel where the goroutines send found poem IDs.
+	found := make(chan int, sp.NRoutines)
+	// The smallest poem ID that can be blacked out.
+	smallestPoemID := searchFailure
+
 	// Get the lengths from the poems folder
-	lengths, lengthsErr := getLengths(poemsFolder)
+	lengths, lengthsErr := getLengths(sp.PoemsFolder)
 	if lengthsErr != nil {
 		return searchFailure, lengthsErr
 	}
-	// Initialize foundFirst channel slice
-	for i := 0; i < numCPU; i++ {
-		log.Printf("Initializing foundFirst channel %d\n", i)
-		foundFirst[i] = make(chan int, 1)
+	// Dispatch the searching goroutines
+	for idx := 0; idx < sp.NRoutines; idx++ {
+		log.Printf("Starting search goroutine #%d\n", idx)
+		go searchEveryNPoems(idx, lengths, sp, found, foundFirst)
 	}
-	// Dispatch the goroutines to search the poems in parallel
-	for i := 0; i < numCPU; i++ {
-		log.Printf("Starting search goroutine #%d\n", i)
-		go searchEveryNPoems(i, poemsFolder, rp, lengths, maxLength)
-	}
-	earliestPoemID := searchFailure
-	for i := 0; i < numCPU; i++ {
+	// Find the smallest poem ID from the searching goroutines
+	for i := 0; i < sp.NRoutines; i++ {
 		foundID := <-found
-		earliestPoemID = min(earliestPoemID, foundID)
-		log.Printf("Main thread:\t received %d; earliest poem in index to black out has ID %d\n", foundID, earliestPoemID)
+		smallestPoemID = min(smallestPoemID, foundID)
+		log.Printf("Main thread\t: received %d; earliest poem in index to black out has ID %d\n", foundID, smallestPoemID)
 	}
-	if earliestPoemID == searchFailure {
+	// If all goroutines fail, then the smallest poem ID is invalid
+	if smallestPoemID == searchFailure {
 		searchErr := errors.New("Failed to find a blackout poem")
 		return searchFailure, searchErr
 	}
-	return earliestPoemID, nil
+	return smallestPoemID, nil
 }
 
-// searchEveryNPoems is a goroutine that searches every `numCPU` poems for one that is
-// shorter than the maximum length and matches the blackout regex, starting from
-// the poem at index `startID` and stopping when there are no more poems.
-func searchEveryNPoems(startID int, poemFolder string, rp *regexp.Regexp, lengths []int, maxLength int) {
-	earliestPoemID := searchFailure
-	for poemID := startID; poemID < len(lengths); poemID += numCPU {
-		log.Printf("Goroutine %d:\t Checking Poem ID %d\n", startID, poemID)
-		doable, err := canBlackout(rp, poemFolder, poemID, lengths[poemID], maxLength)
+// searchEveryNPoems is a goroutine that searches every `sp.NRoutines` poems for one that is shorter than the maximum length and matches the blackout regex, starting from the poem at index `startID`. If it finds a poem to black out, then it sends the poem ID through the `found` channel. If it is the first (by time) to find a poem, then it sends that ID through the `foundFirst` channels.
+func searchEveryNPoems(startID int, lengths []int, sp SearchParams, found chan int, foundFirst []chan int) {
+	// Initialize the ID of the first found poem
+	firstFoundPoemID := searchFailure
+	for poemID := startID; poemID < len(lengths); poemID += sp.NRoutines {
+		log.Printf("Goroutine %d\t: Checking Poem ID %d\n", startID, poemID)
+		doable, err := canBlackout(sp.RP, sp.PoemsFolder, poemID, lengths[poemID], sp.MaxPoemLength)
 		if err != nil {
-			log.Printf("Goroutine %d:\t got an error\n", startID)
+			log.Printf("Goroutine %d\t: got an error\n", startID)
 			log.Fatal(err)
 		}
 		select {
 		case first := <-foundFirst[startID]:
-			log.Printf("Goroutine %d:\t got %d is the first poem ID", startID, first)
-			earliestPoemID = first
+			log.Printf("Goroutine %d\t: got %d is the first poem ID\n", startID, first)
+			firstFoundPoemID = first
 		default:
-			if poemID >= earliestPoemID-numCPU {
-				log.Printf("Goroutine %d did not find an earlier poem than ID %d; stopping", startID, earliestPoemID)
+			if poemID >= firstFoundPoemID-sp.NRoutines {
+				log.Printf("Goroutine %d\t: did not find an earlier poem than ID %d; stopping\n", startID, firstFoundPoemID)
 				found <- searchFailure
 				return
 			}
 			if doable {
-				log.Printf("Goroutine %d found poem %d to black out\n", startID, poemID)
-				if earliestPoemID != searchFailure {
-					for idx := 0; idx < numCPU; idx++ {
-						foundFirst[idx] <- poemID
+				log.Printf("Goroutine %d\t: found poem %d to black out\n", startID, poemID)
+				if firstFoundPoemID != searchFailure {
+					for _, ff := range foundFirst {
+						ff <- poemID
 					}
 				}
 				found <- poemID
-				log.Printf("Goroutine %d stopping", startID)
+				log.Printf("Goroutine %d\t: stopping", startID)
 				return
 			}
 		}
 	}
+	log.Printf("Goroutine %d\t: failed to find a poem\n", startID)
 	found <- searchFailure
 }
 
-// canBlackout reports whether the given poem in the poem folder is shorter
-// than the maximum length and can be blacked out by the blackout regex.
+// canBlackout reports whether the given poem in the poem folder is shorter than the maximum length and can be blacked out by the blackout regex.
 func canBlackout(rp *regexp.Regexp, poemFolder string, poemID int, poemLength int, maxLength int) (bool, error) {
 	if poemLength > maxLength {
 		return false, nil
