@@ -36,12 +36,9 @@ var blackoutRP = regexp.MustCompile(`[^\t\f\r\n\ ]`)
 
 // A Poem in the database has a title, an author, and text.
 type Poem struct {
-	// The title of the poem.
-	Title string
-	// The author of the poem.
-	Author string
-	// The poem's text itself. Poem lines are delineated with an escaped line break character "\n".
-	Text string
+	Title  string // The title of the poem.
+	Author string // The author of the poem.
+	Text   string // The poem's text itself. Poem lines are delineated with an escaped line break character "\n".
 }
 
 // poem2json writes the Poem struct to the given JSON file path.
