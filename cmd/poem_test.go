@@ -5,13 +5,16 @@ import "testing"
 func TestPoemRoundTrip(t *testing.T) {
 	testPoem := Poem{"Test Poem", "Somebody", "something"}
 	testPoemFilename := "test_poem.json"
-	err := poem2json(testPoem, testPoemFilename)
-	if err != nil {
-		t.Fatalf("Could not read to %s: %e", testPoemFilename, err)
+	jsonErr := poem2json(testPoem, testPoemFilename)
+	if jsonErr != nil {
+		t.Fatal(jsonErr)
 	}
-	filePoem, err := json2poem(testPoemFilename)
+	filePoem, poemErr := json2poem(testPoemFilename)
+	if poemErr != nil {
+		t.Fatal(poemErr)
+	}
 	if filePoem != testPoem {
-		t.Fatalf("Poems do not match")
+		t.Fatal("Original poem and file-read poem do not match")
 	}
 }
 

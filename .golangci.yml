@@ -1,0 +1,25 @@
+linters:
+  enable:
+    # enabled by default
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    # disabled by default
+    - bodyclose
+    - canonicalheader
+    - funlen
+    - gochecksumtype
+    - goconst
+    - godot
+    - gofumpt
+    - goimports
+    - mnd
+    - nilerr
+    - revive
+    - sloglint
+linters-settings:
+  mnd:
+    ignored-functions: ["os.WriteFile", "os.Mkdir"]

@@ -28,14 +28,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// BlackoutVersion is the version number of `blackout`.
-const BlackoutVersion = "0.2.0"
-
-// Verbose determines whether to print verbose results.
 var (
+	// Verbose determines whether to print verbose results.
 	Verbose bool
 	// MaxLength determines the maximum poem length to black out.
-	MaxLength int
+	MaxLength = 400
 	// PrintOriginal determines whether to print the original poem before blacking it out.
 	PrintOriginal bool
 )
@@ -44,7 +41,7 @@ var (
 var rootCmd = &cobra.Command{
 	Use:     "blackout <message>",
 	Short:   "Make a blackout poem with the given hidden message",
-	Version: BlackoutVersion,
+	Version: Version,
 	Args:    cobra.ExactArgs(1),
 	Run:     runApp,
 }
@@ -61,7 +58,7 @@ func Execute() {
 // init sets up the flags of the CLI application.
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "V", false, "verbose output")
-	rootCmd.PersistentFlags().IntVarP(&MaxLength, "max-length", "l", 400, "maximum poem length")
+	rootCmd.PersistentFlags().IntVarP(&MaxLength, "max-length", "l", MaxLength, "maximum poem length")
 	rootCmd.PersistentFlags().BoolVarP(&PrintOriginal, "print-original", "p", false, "print original poem before blacking out")
 }
 
@@ -97,5 +94,8 @@ func runApp(cmd *cobra.Command, args []string) {
 		PrintPoem(poem)
 		print("\n")
 	}
-	PrintBlackoutPoem(poem, args[0])
+	printErr := PrintBlackoutPoem(poem, args[0])
+	if printErr != nil {
+		log.Fatal(err)
+	}
 }

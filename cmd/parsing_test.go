@@ -5,20 +5,23 @@ import (
 )
 
 func TestDownloadingPoems(t *testing.T) {
-	err := downloadPoemsJSON("poems.json")
-	if err != nil {
+	downloadErr := downloadPoemsJSON("poems.json")
+	if downloadErr != nil {
 		t.Fail()
 	}
 }
 
 func TestReadPoemDB(t *testing.T) {
-	downloadPoemsJSON("poems.json")
-	poems, err := readPoemsJSON("poems.json")
-	if err != nil {
+	downloadErr := downloadPoemsJSON("poems.json")
+	if downloadErr != nil {
 		t.Fail()
 	}
-	err = splitPoems(poems, "poem_folder")
-	if err != nil {
+	poems, readErr := readPoemsJSON("poems.json")
+	if readErr != nil {
+		t.Fail()
+	}
+	splitErr := splitPoems(poems, "poem_folder")
+	if splitErr != nil {
 		t.Fail()
 	}
 }

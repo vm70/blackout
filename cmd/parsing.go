@@ -46,15 +46,6 @@ var (
 	dataFolderPoems = filepath.Join(dataFolder, "poems")
 )
 
-// poemsFileHashMatches returns an error if the given file's SHA256 hash doesn't match the hard-coded one above.
-func poemsFileHashMatches(filename string) error {
-	content, readErr := os.ReadFile(filename)
-	if readErr != nil {
-		return readErr
-	}
-	return poemsBytesHashMatches(content)
-}
-
 // poemsBytesHashMatches returns an error if the given byte array's SHA256 hash doesn't match the hard-coded one above.
 func poemsBytesHashMatches(fileBytes []byte) error {
 	respSum := sha256.Sum256(fileBytes)
@@ -100,6 +91,7 @@ func downloadPoemsJSON(poemsJSON string) error {
 		if readErr != nil {
 			return readErr
 		}
+		defer resp.Body.Close()
 		hashErr := poemsBytesHashMatches(body)
 		if hashErr != nil {
 			return hashErr
@@ -123,7 +115,10 @@ func splitPoems(poems []Poem, poemFolder string) error {
 	_, folderErr := os.Stat(poemFolder)
 	if os.IsNotExist(folderErr) {
 		log.Printf("Creating poem folder %s\n", poemFolder)
-		os.Mkdir(poemFolder, 0o750)
+		dirErr := os.Mkdir(poemFolder, 0o750)
+		if dirErr != nil {
+			return dirErr
+		}
 	} else {
 		log.Printf("Poem folder %s already exists\n", poemFolder)
 		return nil
@@ -146,12 +141,15 @@ func setupDataFolder() error {
 	_, folderErr := os.Stat(dataFolder)
 	if os.IsNotExist(folderErr) {
 		log.Printf("Creating data folder %s\n", dataFolder)
-		os.Mkdir(dataFolder, 0o750)
+		dirErr := os.Mkdir(dataFolder, 0o750)
+		if dirErr != nil {
+			return dirErr
+		}
 	} else {
 		log.Printf("Data folder %s already exists\n", dataFolder)
 	}
 	// Download the poem database, and put it in the data folder
-	dlErr := downloadPoemsJSON(filepath.Join(dataFolder, "poems.json"))
+	dlErr := downloadPoemsJSON(dataFolderJSON)
 	if dlErr != nil {
 		return dlErr
 	}
