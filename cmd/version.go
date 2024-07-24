@@ -18,4 +18,4 @@ limitations under the License.
 package cmd
 
 // Version is the version number of `blackout`, using Go's variant syntax for semantic versioning.
-const Version = "v0.3.0-alpha.0"
+const Version = "v0.3.0-alpha.1"
