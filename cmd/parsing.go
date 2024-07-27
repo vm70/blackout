@@ -74,11 +74,17 @@ func readPoemsJSON(poemsJSON string) ([]Poem, error) {
 }
 
 // downloadPoemsJSON downloads the poem JSON file and places it in the given path. If the poems JSON file already exists (from a previous run), then it returns nil.
-func downloadPoemsJSON(poemsJSON string) error {
+func downloadPoemsJSON(poemsPath string) error {
+	// Make parent directory if it doesn't exist
+	dir, _ := filepath.Split(poemsPath)
+	mkdirErr := os.MkdirAll(dir, 0o750)
+	if mkdirErr != nil {
+		return mkdirErr
+	}
 	// Check if file exists
-	_, fileErr := os.Stat(poemsJSON)
+	_, fileErr := os.Stat(poemsPath)
 	if fileErr == nil {
-		log.Printf("File already exists at %s\n", poemsJSON)
+		log.Printf("File already exists at %s\n", poemsPath)
 		return nil
 	}
 	if errors.Is(fileErr, os.ErrNotExist) {
@@ -96,7 +102,7 @@ func downloadPoemsJSON(poemsJSON string) error {
 		if hashErr != nil {
 			return hashErr
 		}
-		writeErr := os.WriteFile(poemsJSON, body, 0o666)
+		writeErr := os.WriteFile(poemsPath, body, 0o666)
 		if writeErr != nil {
 			return writeErr
 		}
