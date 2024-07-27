@@ -29,10 +29,11 @@ const searchFailure = int(^uint(0) >> 1)
 
 // A SearchParams struct contains common information about the folder searching operation.
 type SearchParams struct {
-	NRoutines     int            // The number of goroutines to dispatch when searching.
-	PoemsFolder   string         // The file path to the poems folder.
-	RP            *regexp.Regexp // The blackout regex pointer.
-	MaxPoemLength int            // The maximum poem length [characters].
+	NRoutines        int            // The number of goroutines to dispatch when searching.
+	PoemsFolder      string         // The file path to the poems folder.
+	RP               *regexp.Regexp // The blackout regex pointer.
+	MaxPoemLength    int            // The maximum poem length [characters]
+	AllowProfanities bool           // Whether to allow profanities in searching.
 }
 
 // searchPoemsFolder searches the poems folder for poems smaller than the maximum length that match the given blackout regex.
@@ -80,7 +81,7 @@ func searchEveryNPoems(startID int, lengths []int, sp SearchParams, found chan i
 	firstFoundPoemID := searchFailure
 	for poemID := startID; poemID < len(lengths); poemID += sp.NRoutines {
 		log.Printf("Goroutine %d\t: Checking Poem ID %d\n", startID, poemID)
-		doable, err := canBlackout(sp.RP, sp.PoemsFolder, poemID, lengths[poemID], sp.MaxPoemLength)
+		doable, err := canBlackout(sp.RP, sp.PoemsFolder, poemID, lengths[poemID], sp.MaxPoemLength, sp.AllowProfanities)
 		if err != nil {
 			log.Printf("Goroutine %d\t: got an error\n", startID)
 			log.Fatal(err)
@@ -112,16 +113,27 @@ func searchEveryNPoems(startID int, lengths []int, sp SearchParams, found chan i
 	found <- searchFailure
 }
 
-// canBlackout reports whether the given poem in the poem folder is shorter than the maximum length and can be blacked out by the blackout regex.
-func canBlackout(rp *regexp.Regexp, poemFolder string, poemID int, poemLength int, maxLength int) (bool, error) {
+// canBlackout reports whether the given poem in the poem folder is:
+//
+// - shorter than the maximum length
+// - is not profane, if profanities are not allowed
+// - can be blacked out by the blackout regex.
+func canBlackout(rp *regexp.Regexp, poemFolder string, poemID int, poemLength int, maxLength int, profanities bool) (bool, error) {
+	// Check poem length
 	if poemLength > maxLength {
 		return false, nil
 	}
+	// Read poem
 	poemPath := filepath.Join(poemFolder, poemFilename(poemID))
 	poem, err := json2poem(poemPath)
 	if err != nil {
 		return false, err
 	}
+	// Check profanities
+	if !profanities && isProfane(poem) {
+		return false, nil
+	}
+	// Check regex
 	delineatedPoem := delineate(poem)
 	return rp.MatchString(delineatedPoem), nil
 }

@@ -26,13 +26,19 @@ import (
 	"regexp"
 	"strings"
 	"unicode"
+
+	"github.com/TwiN/go-away"
 )
 
 // regexEscapes contains the characters that need to be escaped in regexes.
 const regexEscapes = `.+*?()|[]{}^$`
 
-// blackoutRP is the regular expression pointer that matches every non-whitespace charater for blacking out.
-var blackoutRP = regexp.MustCompile(`[^\t\f\r\n\ ]`)
+var (
+	// blackoutRP is the regular expression pointer that matches every non-whitespace charater for blacking out.
+	blackoutRP = regexp.MustCompile(`[^\t\f\r\n\ ]`)
+	// Regular expression pointer that matches every non-ASCII character.
+	ASCIIRP = regexp.MustCompile("[[:^ascii:]]")
+)
 
 // A Poem in the database has a title, an author, and text.
 type Poem struct {
@@ -118,6 +124,12 @@ func msg2regex(message string) string {
 	}
 	regexString += `(.*?)\z`
 	return regexString
+}
+
+// isProfane signals whether a poem's text contains profane language.
+func isProfane(poem Poem) bool {
+	filteredText := ASCIIRP.ReplaceAllLiteralString(poem.Text, "")
+	return goaway.IsProfane(filteredText)
 }
 
 // PrintPoem prints the given (un-blacked-out) poem.
