@@ -27,9 +27,9 @@ import (
 // lengthsFilename is the name of the file in the poems folder where each poem's length (in characters) is stored.
 const lengthsFilename = "lengths.csv"
 
-// writeLengths writes the poem folder's lengths (stored as a string array) to the CSV stored in the poem folder.
-func writeLengths(lengths []string, poemFolder string) error {
-	lengthsPath := filepath.Join(poemFolder, lengthsFilename)
+// writeLengths writes the poems folder's lengths (stored as a string array) to the CSV stored in the poem folder.
+func writeLengths(lengths []string, poemsFolder string) error {
+	lengthsPath := filepath.Join(poemsFolder, lengthsFilename)
 	file, createErr := os.Create(lengthsPath)
 	if createErr != nil {
 		return createErr
@@ -40,10 +40,10 @@ func writeLengths(lengths []string, poemFolder string) error {
 	return writeErr
 }
 
-// getLengths reads the lengths file in the given poem folder and returns the array of corresponding poem lengths.
-func getLengths(poemFolder string) ([]int, error) {
+// getLengths reads the lengths file in the given poems folder and returns the array of corresponding poem lengths.
+func getLengths(poemsFolder string) ([]int, error) {
 	lengths := []int{}
-	lengthsPath := filepath.Join(poemFolder, lengthsFilename)
+	lengthsPath := filepath.Join(poemsFolder, lengthsFilename)
 	file, openErr := os.Open(lengthsPath)
 	if openErr != nil {
 		return lengths, openErr

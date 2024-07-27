@@ -15,7 +15,6 @@ linters:
     - goconst
     - godot
     - gofumpt
-    - goimports
     - mnd
     - nilerr
     - revive

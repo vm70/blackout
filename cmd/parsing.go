@@ -110,29 +110,29 @@ func poemFilename(poemID int) string {
 	return "poem" + strconv.Itoa(poemID) + ".json"
 }
 
-// Split an array of poems into JSON files in the poem folder.
-func splitPoems(poems []Poem, poemFolder string) error {
-	_, folderErr := os.Stat(poemFolder)
+// Split an array of poems into JSON files in the poems folder.
+func splitPoems(poems []Poem, poemsFolder string) error {
+	_, folderErr := os.Stat(poemsFolder)
 	if os.IsNotExist(folderErr) {
-		log.Printf("Creating poem folder %s\n", poemFolder)
-		dirErr := os.Mkdir(poemFolder, 0o750)
+		log.Printf("Creating poems folder %s\n", poemsFolder)
+		dirErr := os.Mkdir(poemsFolder, 0o750)
 		if dirErr != nil {
 			return dirErr
 		}
 	} else {
-		log.Printf("Poem folder %s already exists\n", poemFolder)
+		log.Printf("Poems folder %s already exists\n", poemsFolder)
 		return nil
 	}
 	lengths := []string{}
 	for idx, poem := range poems {
 		lengths = append(lengths, fmt.Sprintf("%d", len(poem.Text)))
-		poemJSON := filepath.Join(poemFolder, poemFilename(idx))
+		poemJSON := filepath.Join(poemsFolder, poemFilename(idx))
 		poemErr := poem2json(poem, poemJSON)
 		if poemErr != nil {
 			return poemErr
 		}
 	}
-	return writeLengths(lengths, poemFolder)
+	return writeLengths(lengths, poemsFolder)
 }
 
 // setupDataFolder sets up this CLI application's data folder.
@@ -154,8 +154,8 @@ func setupDataFolder() error {
 		return dlErr
 	}
 	// Populate the "poems" folder in the data folder if not already done
-	_, poemFolderErr := os.Stat(filepath.Join(dataFolder, "poems"))
-	if os.IsNotExist(poemFolderErr) {
+	_, poemsFolderErr := os.Stat(filepath.Join(dataFolder, "poems"))
+	if os.IsNotExist(poemsFolderErr) {
 		poems, readErr := readPoemsJSON(filepath.Join(dataFolder, "poems.json"))
 		if readErr != nil {
 			return readErr

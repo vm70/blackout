@@ -33,6 +33,7 @@ var (
 	Verbose       bool  // Whether to print verbose results.
 	MaxLength     = 400 // Maximum poem length to black out.
 	PrintOriginal bool  // Whether to print the original poem before blacking it out.
+	Profanities   bool  // Whether to filter out poems with offensive words while searching.
 )
 
 // rootCmd represents the base command when called without any sub-commands.
@@ -57,7 +58,8 @@ func Execute() {
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "V", false, "verbose output")
 	rootCmd.PersistentFlags().IntVarP(&MaxLength, "max-length", "l", MaxLength, "maximum poem length")
-	rootCmd.PersistentFlags().BoolVarP(&PrintOriginal, "print-original", "p", false, "print original poem before blacking out")
+	rootCmd.PersistentFlags().BoolVarP(&PrintOriginal, "print-original", "o", false, "print original poem before blacking out")
+	rootCmd.PersistentFlags().BoolVarP(&Profanities, "allow-profanities", "p", false, "Allow blacking out poems with profanities")
 }
 
 // runApp runs the CLI application.
@@ -77,7 +79,7 @@ func runApp(cmd *cobra.Command, args []string) {
 	if setupErr != nil {
 		log.Fatalf(setupErr.Error())
 	}
-	sp := SearchParams{runtime.NumCPU(), dataFolderPoems, blackoutRegex, MaxLength}
+	sp := SearchParams{runtime.NumCPU(), dataFolderPoems, blackoutRegex, MaxLength, Profanities}
 	poemID, err := searchPoemsFolder(sp)
 	if err != nil {
 		log.Fatal(err)
