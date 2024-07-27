@@ -4,7 +4,7 @@ import "testing"
 
 func TestPoemRoundTrip(t *testing.T) {
 	testPoem := Poem{"Test Poem", "Somebody", "something"}
-	testPoemFilename := "test_poem.json"
+	testPoemFilename := "testdata/test_poem.json"
 	jsonErr := poem2json(testPoem, testPoemFilename)
 	if jsonErr != nil {
 		t.Fatal(jsonErr)
