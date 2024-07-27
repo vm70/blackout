@@ -29,20 +29,31 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const longDescription = `Blackout is a command-line application that automates the process of making
+simple blackout poems, where characters and words of an an original text source
+are removed to create an entirely new piece. It combs through a database of
+public-domain poetry to find one with characters that match a given message,
+then prints the resulting blacked-out poem to standard output.`
+
+const examples = `blackout --help
+blackout 'lorem ipsum' --max-length 800`
+
 var (
-	Verbose       bool  // Whether to print verbose results.
-	MaxLength     = 400 // Maximum poem length to black out.
-	PrintOriginal bool  // Whether to print the original poem before blacking it out.
-	Profanities   bool  // Whether to filter out poems with offensive words while searching.
+	Verbose       bool // Whether to print verbose results.
+	MaxLength     int  // Maximum poem length to black out.
+	PrintOriginal bool // Whether to print the original poem before blacking it out.
+	Profanities   bool // Whether to filter out poems with offensive words while searching.
 )
 
 // rootCmd represents the base command when called without any sub-commands.
 var rootCmd = &cobra.Command{
 	Use:     "blackout <message>",
 	Short:   "Make a blackout poem with the given hidden message",
+	Long:    longDescription,
 	Version: Version,
 	Args:    cobra.ExactArgs(1),
 	Run:     runApp,
+	Example: examples,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -57,9 +68,9 @@ func Execute() {
 // init sets up the flags of the CLI application.
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "V", false, "verbose output")
-	rootCmd.PersistentFlags().IntVarP(&MaxLength, "max-length", "l", MaxLength, "maximum poem length")
+	rootCmd.PersistentFlags().IntVarP(&MaxLength, "max-length", "l", 400, "maximum poem length")
 	rootCmd.PersistentFlags().BoolVarP(&PrintOriginal, "print-original", "o", false, "print original poem before blacking out")
-	rootCmd.PersistentFlags().BoolVarP(&Profanities, "allow-profanities", "p", false, "Allow blacking out poems with profanities")
+	rootCmd.PersistentFlags().BoolVarP(&Profanities, "allow-profanities", "p", false, "allow blacking out poems with profanities")
 }
 
 // runApp runs the CLI application.
