@@ -6,10 +6,7 @@ import (
 )
 
 const (
-	MaxUint = ^uint(0)
-	MinUint = 0
-	MaxInt  = int(MaxUint >> 1)
-	MinInt  = -MaxInt - 1
+	MaxInt = int(^uint(0) >> 1)
 )
 
 func TestCanBlackout(t *testing.T) {
