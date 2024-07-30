@@ -74,11 +74,17 @@ func readPoemsJSON(poemsJSON string) ([]Poem, error) {
 }
 
 // downloadPoemsJSON downloads the poem JSON file and places it in the given path. If the poems JSON file already exists (from a previous run), then it returns nil.
-func downloadPoemsJSON(poemsJSON string) error {
+func downloadPoemsJSON(poemsPath string) error {
+	// Make parent directory if it doesn't exist
+	dir, _ := filepath.Split(poemsPath)
+	mkdirErr := os.MkdirAll(dir, 0o750)
+	if mkdirErr != nil {
+		return mkdirErr
+	}
 	// Check if file exists
-	_, fileErr := os.Stat(poemsJSON)
+	_, fileErr := os.Stat(poemsPath)
 	if fileErr == nil {
-		log.Printf("File already exists at %s\n", poemsJSON)
+		log.Printf("File already exists at %s\n", poemsPath)
 		return nil
 	}
 	if errors.Is(fileErr, os.ErrNotExist) {
@@ -96,7 +102,7 @@ func downloadPoemsJSON(poemsJSON string) error {
 		if hashErr != nil {
 			return hashErr
 		}
-		writeErr := os.WriteFile(poemsJSON, body, 0o666)
+		writeErr := os.WriteFile(poemsPath, body, 0o666)
 		if writeErr != nil {
 			return writeErr
 		}
@@ -110,29 +116,29 @@ func poemFilename(poemID int) string {
 	return "poem" + strconv.Itoa(poemID) + ".json"
 }
 
-// Split an array of poems into JSON files in the poem folder.
-func splitPoems(poems []Poem, poemFolder string) error {
-	_, folderErr := os.Stat(poemFolder)
+// Split an array of poems into JSON files in the poems folder.
+func splitPoems(poems []Poem, poemsFolder string) error {
+	_, folderErr := os.Stat(poemsFolder)
 	if os.IsNotExist(folderErr) {
-		log.Printf("Creating poem folder %s\n", poemFolder)
-		dirErr := os.Mkdir(poemFolder, 0o750)
+		log.Printf("Creating poems folder %s\n", poemsFolder)
+		dirErr := os.Mkdir(poemsFolder, 0o750)
 		if dirErr != nil {
 			return dirErr
 		}
 	} else {
-		log.Printf("Poem folder %s already exists\n", poemFolder)
+		log.Printf("Poems folder %s already exists\n", poemsFolder)
 		return nil
 	}
 	lengths := []string{}
 	for idx, poem := range poems {
 		lengths = append(lengths, fmt.Sprintf("%d", len(poem.Text)))
-		poemJSON := filepath.Join(poemFolder, poemFilename(idx))
+		poemJSON := filepath.Join(poemsFolder, poemFilename(idx))
 		poemErr := poem2json(poem, poemJSON)
 		if poemErr != nil {
 			return poemErr
 		}
 	}
-	return writeLengths(lengths, poemFolder)
+	return writeLengths(lengths, poemsFolder)
 }
 
 // setupDataFolder sets up this CLI application's data folder.
@@ -154,8 +160,8 @@ func setupDataFolder() error {
 		return dlErr
 	}
 	// Populate the "poems" folder in the data folder if not already done
-	_, poemFolderErr := os.Stat(filepath.Join(dataFolder, "poems"))
-	if os.IsNotExist(poemFolderErr) {
+	_, poemsFolderErr := os.Stat(filepath.Join(dataFolder, "poems"))
+	if os.IsNotExist(poemsFolderErr) {
 		poems, readErr := readPoemsJSON(filepath.Join(dataFolder, "poems.json"))
 		if readErr != nil {
 			return readErr

@@ -2,9 +2,26 @@ package cmd
 
 import "testing"
 
+func TestIsProfane(t *testing.T) {
+	profanePoem, prErr := json2poem("testdata/profane_poem.json")
+	if prErr != nil {
+		t.Fatalf(prErr.Error())
+	}
+	nonProfanePoem, nonprErr := json2poem("testdata/non_profane_poem.json")
+	if nonprErr != nil {
+		t.Fatalf(nonprErr.Error())
+	}
+	if isProfane(nonProfanePoem) {
+		t.Fatalf("non-profane poem should not be profane")
+	}
+	if !isProfane(profanePoem) {
+		t.Fatalf("profane poem should not be profane")
+	}
+}
+
 func TestPoemRoundTrip(t *testing.T) {
-	testPoem := Poem{"Test Poem", "Somebody", "something"}
-	testPoemFilename := "test_poem.json"
+	testPoem := Poem{"Lorem", "Ipsum", "Dolor Sit Amet"}
+	testPoemFilename := "testdata/test_poem.json"
 	jsonErr := poem2json(testPoem, testPoemFilename)
 	if jsonErr != nil {
 		t.Fatal(jsonErr)
