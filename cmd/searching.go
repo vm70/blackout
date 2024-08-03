@@ -29,12 +29,12 @@ const searchFailure = int(^uint(0) >> 1)
 
 // A SearchParams struct contains common information about the folder searching operation.
 type SearchParams struct {
-	PoemsFolder      string         // The file path to the poems folder.
-	NPoems           int            // The number of poems in the poems folder.
-	NRoutines        int            // The number of goroutines to dispatch when searching.
-	RP               *regexp.Regexp // The blackout regex pointer.
-	MaxLength        int            // The maximum poem length [characters]
-	AllowProfanities bool           // Whether to allow profanities in searching.
+	PoemsFolder string         // The file path to the poems folder.
+	NPoems      int            // The number of poems in the poems folder.
+	NThreads    int            // The number of goroutines to dispatch when searching.
+	RP          *regexp.Regexp // The blackout regex pointer.
+	MaxLength   int            // The maximum poem length [characters]
+	Profanities bool           // Whether to allow profanities in searching.
 }
 
 // searchPoemsFolder searches the poems folder for poems smaller than the maximum length that match the given blackout regex.
@@ -42,23 +42,23 @@ func searchPoemsFolder(sp SearchParams) (int, error) {
 	// Initialize important search parameters
 
 	// Channels that tell each goroutine the first poem ID found.
-	foundFirst := make([]chan int, sp.NRoutines)
-	for idx := 0; idx < sp.NRoutines; idx++ {
+	foundFirst := make([]chan int, sp.NThreads)
+	for idx := 0; idx < sp.NThreads; idx++ {
 		log.Printf("Initializing foundFirst channel %d\n", idx)
 		foundFirst[idx] = make(chan int, 1)
 	}
 	// Channel where the goroutines send found poem IDs.
-	found := make(chan int, sp.NRoutines)
+	found := make(chan int, sp.NThreads)
 	// The smallest poem ID that can be blacked out.
 	smallestPoemID := searchFailure
 
 	// Dispatch the searching goroutines
-	for idx := 0; idx < sp.NRoutines; idx++ {
+	for idx := 0; idx < sp.NThreads; idx++ {
 		log.Printf("Starting search goroutine #%d\n", idx)
 		go searchEveryNPoems(idx, sp, found, foundFirst)
 	}
 	// Find the smallest poem ID from the searching goroutines
-	for i := 0; i < sp.NRoutines; i++ {
+	for i := 0; i < sp.NThreads; i++ {
 		foundID := <-found
 		smallestPoemID = min(smallestPoemID, foundID)
 		log.Printf("Main thread\t: received %d; earliest poem in index to black out has ID %d\n", foundID, smallestPoemID)
@@ -76,8 +76,7 @@ func searchEveryNPoems(startID int, sp SearchParams, found chan int, foundFirst 
 	// Initialize the ID of the first found poem
 	firstFoundPoemID := searchFailure
 	// Search the poem IDs that this routine is responsible for
-	for poemID := startID; poemID < sp.NPoems; poemID += sp.NRoutines {
-		log.Printf("Goroutine %d\t: Reading Poem ID %d\n", startID, poemID)
+	for poemID := startID; poemID < sp.NPoems; poemID += sp.NThreads {
 		// Read the current poem
 		poemPath := filepath.Join(sp.PoemsFolder, poemFilename(poemID))
 		parsedPoem, readErr := json2parsedPoem(poemPath)
@@ -87,10 +86,12 @@ func searchEveryNPoems(startID int, sp SearchParams, found chan int, foundFirst 
 		}
 		// Check the poem's length
 		if parsedPoem.Length > sp.MaxLength {
+			log.Printf("Goroutine %d\t: Poem %d is too long (%d > %d)", startID, poemID, parsedPoem.Length, sp.MaxLength)
 			continue
 		}
 		// Check if the poem's profanity level fits within search params
-		if parsedPoem.IsProfane && !sp.AllowProfanities {
+		if parsedPoem.IsProfane && !sp.Profanities {
+			log.Printf("Goroutine %d\t: Poem %d contains profane characters", startID, poemID)
 			continue
 		}
 		// Check if it can be blacked out
@@ -104,7 +105,7 @@ func searchEveryNPoems(startID int, sp SearchParams, found chan int, foundFirst 
 			log.Printf("Goroutine %d\t: got %d is the first poem ID\n", startID, first)
 			firstFoundPoemID = first
 		default:
-			if poemID >= firstFoundPoemID-sp.NRoutines {
+			if poemID >= firstFoundPoemID-sp.NThreads {
 				log.Printf("Goroutine %d\t: did not find an earlier poem than ID %d; stopping\n", startID, firstFoundPoemID)
 				found <- searchFailure
 				return

@@ -132,7 +132,6 @@ func buildBlackout(parsedPoem ParsedPoem, rp *regexp.Regexp) (string, error) {
 // msg2regex converts a blackout poem's message into a regex string for searching poems.
 func msg2regex(message string) string {
 	regexString := `(?s)\A`
-
 	for _, msgChar := range strings.Split(message, "") {
 		if unicode.IsSpace(rune(msgChar[0])) {
 			continue
@@ -144,6 +143,8 @@ func msg2regex(message string) string {
 		}
 	}
 	regexString += `(.*?)\z`
+	log.Printf("Message = %s\n", message)
+	log.Printf("Regex = %s\n", regexString)
 	return regexString
 }
 
