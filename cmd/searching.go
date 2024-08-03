@@ -27,7 +27,7 @@ import (
 // default return value for when a searching function fails; the maximum integer value.
 const searchFailure = int(^uint(0) >> 1)
 
-// A SearchParams struct contains common information about the folder searching operation.
+// A SearchParams struct contains common information about the poem searching function.
 type SearchParams struct {
 	PoemsFolder string         // The file path to the poems folder.
 	NPoems      int            // The number of poems in the poems folder.
@@ -71,7 +71,13 @@ func searchPoemsFolder(sp SearchParams) (int, error) {
 	return smallestPoemID, nil
 }
 
-// searchEveryNPoems is a goroutine that searches every `sp.NRoutines` poems for one that is shorter than the maximum length and matches the blackout regex, starting from the poem at index `startID`. If it finds a poem to black out, then it sends the poem ID through the `found` channel. If it is the first (by time) to find a poem, then it sends that ID through the `foundFirst` channels.
+// searchEveryNPoems is a goroutine that searches every `sp.NRoutines` poems for one that:
+//
+// - is shorter than the maximum length
+// - matches the blackout regex
+// - matches the search profanity level
+//
+// It starts from the poem at index `startID`. If it finds a poem to black out, then it sends the poem ID through the `found` channel. If it is the first (by time) to find a poem, then it sends that ID through the `foundFirst` channels.
 func searchEveryNPoems(startID int, sp SearchParams, found chan int, foundFirst []chan int) {
 	// Initialize the ID of the first found poem
 	firstFoundPoemID := searchFailure
@@ -91,7 +97,7 @@ func searchEveryNPoems(startID int, sp SearchParams, found chan int, foundFirst 
 		}
 		// Check if the poem's profanity level fits within search params
 		if parsedPoem.IsProfane && !sp.Profanities {
-			log.Printf("Goroutine %d\t: Poem %d contains profane characters", startID, poemID)
+			log.Printf("Goroutine %d\t: Poem %d contains profane words", startID, poemID)
 			continue
 		}
 		// Check if it can be blacked out
@@ -118,8 +124,10 @@ func searchEveryNPoems(startID int, sp SearchParams, found chan int, foundFirst 
 					}
 				}
 				found <- poemID
-				log.Printf("Goroutine %d\t: stopping", startID)
+				log.Printf("Goroutine %d\t: stopping\n", startID)
 				return
+			} else {
+				log.Printf("Goroutine %d\t: can't black out poem %d\n", startID, poemID)
 			}
 		}
 	}
@@ -127,7 +135,7 @@ func searchEveryNPoems(startID int, sp SearchParams, found chan int, foundFirst 
 	found <- searchFailure
 }
 
-// canBlackout signals whether the given poem in the poems folder can be blacked out with the regex.
+// canBlackout signals whether the given parsed poem can be blacked out with the regex.
 func canBlackout(rp *regexp.Regexp, parsedPoem ParsedPoem) (bool, error) {
 	delineatedPoem := delineate(parsedPoem)
 	return rp.MatchString(delineatedPoem), nil
