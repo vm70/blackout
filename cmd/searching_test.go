@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"os"
 	"regexp"
 	"testing"
 )
@@ -25,5 +26,34 @@ func TestCanBlackout(t *testing.T) {
 		t.Logf("Error: %s", err.Error())
 		t.Logf("Bad regex with good length: %t", badR)
 		t.Fail()
+	}
+}
+
+func TestSearchingIsDeterministic(t *testing.T) {
+	regexpString := msg2regex("a very long message")
+	blackoutRegex := regexp.MustCompile(regexpString)
+	setupErr := setupDataFolder()
+	if setupErr != nil {
+		t.Fatalf(setupErr.Error())
+	}
+	dir, dirErr := os.ReadDir("testdata/poems_folder")
+	if dirErr != nil {
+		t.Fatalf(dirErr.Error())
+	}
+	for nThreads := 1; nThreads < 10; nThreads++ {
+		sp := SearchParams{dataFolderPoems, len(dir), nThreads, blackoutRegex, MaxLength, Profanities}
+		poemID, searchErr := searchPoemsFolder(sp)
+		if searchErr != nil {
+			t.Fatalf(searchErr.Error())
+		}
+		for i := 0; i < 10; i++ {
+			loopPoemID, searchErr := searchPoemsFolder(sp)
+			if searchErr != nil {
+				t.Fatalf(searchErr.Error())
+			}
+			if loopPoemID != poemID {
+				t.Fatalf("%d != %d", loopPoemID, poemID)
+			}
+		}
 	}
 }
