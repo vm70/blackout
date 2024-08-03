@@ -18,6 +18,7 @@ limitations under the License.
 package cmd
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -107,14 +108,13 @@ func run(cmd *cobra.Command, args []string) {
 	log.Printf("profanities\t: %t", sp.Profanities)
 	poemID, err := searchPoemsFolder(sp)
 	if err != nil {
+		fmt.Printf("Could not find a blackout poem for message `%s`\n", args[0])
 		log.Fatal(err)
 	}
-	log.Printf("Found poem ID %d to black out\n", poemID)
 	poem, err := json2parsedPoem(filepath.Join(dataFolderPoems, poemFilename(poemID)))
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("Poem ID %d is \"%s\"\n", poemID, poem.Title)
 	if Verbose {
 		time.Sleep(1 * time.Second)
 	}
