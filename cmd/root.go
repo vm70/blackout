@@ -44,7 +44,7 @@ var (
 	PrintOriginal bool // Whether to print the original poem before blacking it out.
 	Profanities   bool // Whether to filter out poems with offensive words while searching.
 	Force         bool // Whether to re-download and re-parse the poems dataset.
-	NThreads      int  // Number of routines.
+	NThreads      int  // Number of threads.
 )
 
 // rootCmd represents the base command when called without any sub-commands.
@@ -73,8 +73,8 @@ func init() {
 	rootCmd.PersistentFlags().IntVarP(&MaxLength, "max-length", "l", 400, "maximum poem length")
 	rootCmd.PersistentFlags().BoolVarP(&PrintOriginal, "print-original", "o", false, "print original poem before blacking out")
 	rootCmd.PersistentFlags().BoolVarP(&Profanities, "allow-profanities", "p", false, "allow blacking out poems with profanities")
-	rootCmd.PersistentFlags().BoolVarP(&Force, "force", "f", false, "Force re-downloading the public domain poetry dataset")
-	rootCmd.PersistentFlags().IntVarP(&NThreads, "routines", "r", runtime.NumCPU(), "How many threads to use for poem searching")
+	rootCmd.PersistentFlags().BoolVarP(&Force, "force", "f", false, "force re-downloading the public domain poetry dataset")
+	rootCmd.PersistentFlags().IntVarP(&NThreads, "threads", "t", runtime.NumCPU(), "how many threads to use for poem searching")
 }
 
 // run runs the CLI application.
@@ -102,7 +102,7 @@ func run(cmd *cobra.Command, args []string) {
 	}
 	sp := SearchParams{dataFolderPoems, len(dir), NThreads, blackoutRegex, MaxLength, Profanities}
 	log.Printf("# poems\t: %d", sp.NPoems)
-	log.Printf("# routines\t: %d", sp.NThreads)
+	log.Printf("# threads\t: %d", sp.NThreads)
 	log.Printf("max length [chars]\t: %d", sp.MaxLength)
 	log.Printf("profanities\t: %t", sp.Profanities)
 	poemID, err := searchPoemsFolder(sp)
