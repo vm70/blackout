@@ -116,8 +116,8 @@ func poemFilename(poemID int) string {
 	return "poem" + strconv.Itoa(poemID) + ".json"
 }
 
-// Split an array of poems into JSON files in the poems folder.
-func splitPoems(poems []Poem, poemsFolder string) error {
+// Parse an array of poems, and split them into JSON files in the poems folder.
+func parsePoems(poems []Poem, poemsFolder string) error {
 	_, folderErr := os.Stat(poemsFolder)
 	if os.IsNotExist(folderErr) {
 		log.Printf("Creating poems folder %s\n", poemsFolder)
@@ -165,7 +165,7 @@ func setupDataFolder() error {
 		if readErr != nil {
 			return readErr
 		}
-		splitErr := splitPoems(poems, filepath.Join(dataFolder, "poems"))
+		splitErr := parsePoems(poems, filepath.Join(dataFolder, "poems"))
 		if splitErr != nil {
 			return splitErr
 		}
