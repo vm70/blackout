@@ -2,15 +2,16 @@ package cmd
 
 import "testing"
 
+var (
+	// Example profane poem.
+	profanePoem = Poem{"Lorem", "Ipsum", "Dolor Sit Amet Fuck"}
+	// Example non-profane poem.
+	nonProfanePoem = Poem{"Lorem", "Ipsum", "Dolor Sit Amet"}
+	// Example non-profane parsed poem.
+	nonProfaneParsedPoem = NewParsedPoem(nonProfanePoem)
+)
+
 func TestIsProfane(t *testing.T) {
-	profanePoem, prErr := json2poem("testdata/profane_poem.json")
-	if prErr != nil {
-		t.Fatalf(prErr.Error())
-	}
-	nonProfanePoem, nonprErr := json2poem("testdata/non_profane_poem.json")
-	if nonprErr != nil {
-		t.Fatalf(nonprErr.Error())
-	}
 	if isProfane(nonProfanePoem) {
 		t.Fatalf("non-profane poem should not be profane")
 	}
@@ -19,18 +20,17 @@ func TestIsProfane(t *testing.T) {
 	}
 }
 
-func TestPoemRoundTrip(t *testing.T) {
-	testPoem := Poem{"Lorem", "Ipsum", "Dolor Sit Amet"}
+func TestParsedPoemRoundTrip(t *testing.T) {
 	testPoemFilename := "testdata/test_poem.json"
-	jsonErr := poem2json(testPoem, testPoemFilename)
+	jsonErr := parsedPoem2json(nonProfaneParsedPoem, testPoemFilename)
 	if jsonErr != nil {
 		t.Fatal(jsonErr)
 	}
-	filePoem, poemErr := json2poem(testPoemFilename)
+	filePoem, poemErr := json2parsedPoem(testPoemFilename)
 	if poemErr != nil {
 		t.Fatal(poemErr)
 	}
-	if filePoem != testPoem {
+	if filePoem != nonProfaneParsedPoem {
 		t.Fatal("Original poem and file-read poem do not match")
 	}
 }

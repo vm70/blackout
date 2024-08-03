@@ -129,16 +129,15 @@ func splitPoems(poems []Poem, poemsFolder string) error {
 		log.Printf("Poems folder %s already exists\n", poemsFolder)
 		return nil
 	}
-	lengths := []string{}
 	for idx, poem := range poems {
-		lengths = append(lengths, fmt.Sprintf("%d", len(poem.Text)))
+		parsedPoem := NewParsedPoem(poem)
 		poemJSON := filepath.Join(poemsFolder, poemFilename(idx))
-		poemErr := poem2json(poem, poemJSON)
+		poemErr := parsedPoem2json(parsedPoem, poemJSON)
 		if poemErr != nil {
 			return poemErr
 		}
 	}
-	return writeLengths(lengths, poemsFolder)
+	return nil
 }
 
 // setupDataFolder sets up this CLI application's data folder.

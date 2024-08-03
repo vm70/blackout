@@ -90,13 +90,17 @@ func runApp(cmd *cobra.Command, args []string) {
 	if setupErr != nil {
 		log.Fatalf(setupErr.Error())
 	}
-	sp := SearchParams{runtime.NumCPU(), dataFolderPoems, blackoutRegex, MaxLength, Profanities}
+	dir, dirErr := os.ReadDir(dataFolderPoems)
+	if dirErr != nil {
+		log.Fatalf(dirErr.Error())
+	}
+	sp := SearchParams{dataFolderPoems, len(dir), runtime.NumCPU(), blackoutRegex, MaxLength, Profanities}
 	poemID, err := searchPoemsFolder(sp)
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Printf("Found poem ID %d to black out\n", poemID)
-	poem, err := json2poem(filepath.Join(dataFolderPoems, poemFilename(poemID)))
+	poem, err := json2parsedPoem(filepath.Join(dataFolderPoems, poemFilename(poemID)))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -105,7 +109,7 @@ func runApp(cmd *cobra.Command, args []string) {
 		time.Sleep(1 * time.Second)
 	}
 	if PrintOriginal {
-		PrintPoem(poem)
+		PrintParsedPoem(poem)
 		print("\n")
 	}
 	printErr := PrintBlackoutPoem(poem, args[0])
