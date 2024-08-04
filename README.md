@@ -6,9 +6,8 @@ removed to create an entirely new piece. It combs through a database of
 public-domain poetry to find one with characters that match a given message,
 then prints the resulting blacked-out poem to standard output.
 
-Blackout is based on the article
-["Using Regular Expressions to Make Blackout Poetry"](regex-blackout) by Vincent
-Mercator and is written in Go.
+Blackout is based on the article ["Using Regular Expressions to Make Blackout
+Poetry"][regex-blackout] by Vincent Mercator and is written in Go.
 
 ## Installation
 
@@ -41,7 +40,7 @@ When given an input message (e.g., `blackout poem`), Blackout will return a
 public-domain poem blacked out to spell it.
 
 ```text
-[user@pc]$ ./blackout 'blackout poem'
+[user@pc]$ blackout 'blackout poem'
 
 ███
 █ b████ ████ █l████ a████ █████
@@ -63,38 +62,41 @@ Running `blackout --help` or `blackout -h` will return the following help
 message.
 
 ```text
-Make a blackout poem with the given hidden message
-
 Usage:
   blackout <message> [flags]
 
+Examples:
+blackout --help
+blackout 'lorem ipsum' --max-length 800
+
 Flags:
-  -p, --allow-profanities   Allow blacking out poems with profanities
+  -p, --allow-profanities   allow blacking out poems with profanities
+  -f, --force               force re-downloading the public domain poetry dataset
   -h, --help                help for blackout
   -l, --max-length int      maximum poem length (default 400)
   -o, --print-original      print original poem before blacking out
+  -t, --threads int         how many threads to use for poem searching (default 4)
   -V, --verbose             verbose output
   -v, --version             version for blackout
-
 ```
+
+## Special Thanks
+
+- HuggingFace user [`DanFosing`][DanFosing] and the
+  [`public-domain-poetry`][public-domain-poetry] dataset
+- [Puttock International](https://pi01.net/), the owner(s) of the [Public Domain
+  Poetry][pdp] website
 
 ## Contributing
 
 Contributions are welcome. If you find a bug, please report it through
-Blackout's [Issues page](issues) on its GitHub repository.
-
-## Special Thanks
-
-- HuggingFace user [`DanFosing`](DanFosing) and the
-  [`public-domain-poetry`](public-domain-poetry) dataset
-- [Puttock International](https://pi01.net/), the owner(s) of the
-  [Public Domain Poetry](pdp) website
+Blackout's [Issues page][issues] on its GitHub repository.
 
 ## License
 
 The poems downloaded and stored by this program are in the public domain, and
-can be viewed either at the [`public-domain-poetry`](public-domain-poetry)
-dataset page on HuggingFace or the [Public Domain Poetry](pdp) website.
+can be viewed either at the [`public-domain-poetry`][public-domain-poetry]
+dataset page on HuggingFace or the [Public Domain Poetry][pdp] website.
 
 The code in this repository uses the Apache 2.0 license. For more information,
 see [LICENSE](https://github.com/vm70/blackout/blob/main/LICENSE).

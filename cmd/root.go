@@ -18,6 +18,7 @@ limitations under the License.
 package cmd
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -43,6 +44,8 @@ var (
 	MaxLength     int  // Maximum poem length to black out.
 	PrintOriginal bool // Whether to print the original poem before blacking it out.
 	Profanities   bool // Whether to filter out poems with offensive words while searching.
+	Force         bool // Whether to re-download and re-parse the poems dataset.
+	NThreads      int  // Number of threads.
 )
 
 // rootCmd represents the base command when called without any sub-commands.
@@ -52,7 +55,7 @@ var rootCmd = &cobra.Command{
 	Long:    longDescription,
 	Version: Version,
 	Args:    cobra.ExactArgs(1),
-	Run:     runApp,
+	Run:     run,
 	Example: examples,
 }
 
@@ -71,41 +74,52 @@ func init() {
 	rootCmd.PersistentFlags().IntVarP(&MaxLength, "max-length", "l", 400, "maximum poem length")
 	rootCmd.PersistentFlags().BoolVarP(&PrintOriginal, "print-original", "o", false, "print original poem before blacking out")
 	rootCmd.PersistentFlags().BoolVarP(&Profanities, "allow-profanities", "p", false, "allow blacking out poems with profanities")
+	rootCmd.PersistentFlags().BoolVarP(&Force, "force", "f", false, "force re-downloading the public domain poetry dataset")
+	rootCmd.PersistentFlags().IntVarP(&NThreads, "threads", "t", runtime.NumCPU(), "how many threads to use for poem searching")
 }
 
-// runApp runs the CLI application.
-func runApp(cmd *cobra.Command, args []string) {
+// run runs the CLI application.
+func run(cmd *cobra.Command, args []string) {
+	// Parse `Verbose` flag
 	if !Verbose {
 		log.SetOutput(io.Discard)
 	} else {
 		log.SetOutput(os.Stdout)
 	}
-	log.Printf("Running %s\n", cmd.Name())
-	log.Printf("Data Folder is %s\n", dataFolder)
+	// Parse `Force` flag
+	if Force {
+		os.RemoveAll(dataFolder)
+	}
+	log.Printf("Running command %s\n", cmd.Name())
 	regexpString := msg2regex(args[0])
 	blackoutRegex := regexp.MustCompile(regexpString)
-	log.Printf("Message = %s\n", args[0])
-	log.Printf("Regex = %s\n", regexpString)
 	setupErr := setupDataFolder()
 	if setupErr != nil {
 		log.Fatalf(setupErr.Error())
 	}
-	sp := SearchParams{runtime.NumCPU(), dataFolderPoems, blackoutRegex, MaxLength, Profanities}
+	dir, dirErr := os.ReadDir(dataFolderPoems)
+	if dirErr != nil {
+		log.Fatalf(dirErr.Error())
+	}
+	sp := SearchParams{dataFolderPoems, len(dir), NThreads, blackoutRegex, MaxLength, Profanities}
+	log.Printf("# poems\t: %d", sp.NPoems)
+	log.Printf("# threads\t: %d", sp.NThreads)
+	log.Printf("max length [chars]\t: %d", sp.MaxLength)
+	log.Printf("profanities\t: %t", sp.Profanities)
 	poemID, err := searchPoemsFolder(sp)
 	if err != nil {
+		fmt.Printf("Could not find a blackout poem for message `%s`\n", args[0])
 		log.Fatal(err)
 	}
-	log.Printf("Found poem ID %d to black out\n", poemID)
-	poem, err := json2poem(filepath.Join(dataFolderPoems, poemFilename(poemID)))
+	poem, err := json2parsedPoem(filepath.Join(dataFolderPoems, poemFilename(poemID)))
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("Poem ID %d is \"%s\"\n", poemID, poem.Title)
 	if Verbose {
 		time.Sleep(1 * time.Second)
 	}
 	if PrintOriginal {
-		PrintPoem(poem)
+		PrintParsedPoem(poem)
 		print("\n")
 	}
 	printErr := PrintBlackoutPoem(poem, args[0])

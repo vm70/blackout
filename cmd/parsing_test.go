@@ -20,8 +20,8 @@ func TestReadPoemDB(t *testing.T) {
 	if readErr != nil {
 		t.Fail()
 	}
-	splitErr := splitPoems(poems, "testdata/poems_folder")
-	if splitErr != nil {
+	parseErr := parsePoems(poems, "testdata/poems_folder")
+	if parseErr != nil {
 		t.Fail()
 	}
 }

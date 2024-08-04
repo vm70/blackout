@@ -32,17 +32,17 @@ import (
 	"github.com/adrg/xdg"
 )
 
-// poemsURL is the online URL where the public domain poetry database JSON file is stored.
+// The online URL where the public domain poetry database JSON file is stored.
 const poemsURL = "https://huggingface.co/datasets/DanFosing/public-domain-poetry/resolve/main/poems.json"
 
 var (
-	// poemsSha256 is the SHA256 hash of the poem database JSON.
+	// SHA256 hash of the poem database JSON.
 	poemsSha256 = [32]byte{0x17, 0x2c, 0xd2, 0xc5, 0xd9, 0x53, 0xc7, 0x02, 0x33, 0x90, 0xa8, 0xd1, 0xf3, 0x37, 0xd0, 0x23, 0xd7, 0xfb, 0xb2, 0xb9, 0x25, 0xdf, 0x0a, 0x66, 0xd0, 0x22, 0x1f, 0x30, 0xc6, 0xad, 0xc3, 0x08}
 	// dataFolder is this program's data folder. On Linux systems, it would be `~/.local/share/blackout`.
 	dataFolder = filepath.Join(xdg.DataHome, "blackout")
-	// Location of the Poems JSON file in the data folder.
+	// Local path to public domain poetry dataset JSON file.
 	dataFolderJSON = filepath.Join(dataFolder, "poems.json")
-	// Location of the poems folder in the data folder.
+	// Directory where the parsed poem JSONs are stored.
 	dataFolderPoems = filepath.Join(dataFolder, "poems")
 )
 
@@ -116,8 +116,8 @@ func poemFilename(poemID int) string {
 	return "poem" + strconv.Itoa(poemID) + ".json"
 }
 
-// Split an array of poems into JSON files in the poems folder.
-func splitPoems(poems []Poem, poemsFolder string) error {
+// Parse an array of poems, and split them into JSON files in the poems folder.
+func parsePoems(poems []Poem, poemsFolder string) error {
 	_, folderErr := os.Stat(poemsFolder)
 	if os.IsNotExist(folderErr) {
 		log.Printf("Creating poems folder %s\n", poemsFolder)
@@ -129,16 +129,15 @@ func splitPoems(poems []Poem, poemsFolder string) error {
 		log.Printf("Poems folder %s already exists\n", poemsFolder)
 		return nil
 	}
-	lengths := []string{}
 	for idx, poem := range poems {
-		lengths = append(lengths, fmt.Sprintf("%d", len(poem.Text)))
+		parsedPoem := NewParsedPoem(poem)
 		poemJSON := filepath.Join(poemsFolder, poemFilename(idx))
-		poemErr := poem2json(poem, poemJSON)
+		poemErr := parsedPoem2json(parsedPoem, poemJSON)
 		if poemErr != nil {
 			return poemErr
 		}
 	}
-	return writeLengths(lengths, poemsFolder)
+	return nil
 }
 
 // setupDataFolder sets up this CLI application's data folder.
@@ -166,7 +165,7 @@ func setupDataFolder() error {
 		if readErr != nil {
 			return readErr
 		}
-		splitErr := splitPoems(poems, filepath.Join(dataFolder, "poems"))
+		splitErr := parsePoems(poems, filepath.Join(dataFolder, "poems"))
 		if splitErr != nil {
 			return splitErr
 		}

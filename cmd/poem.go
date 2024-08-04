@@ -44,14 +44,35 @@ var (
 type Poem struct {
 	Title  string // The title of the poem.
 	Author string // The author of the poem.
-	Text   string // The poem's text itself. Poem lines are delineated with an escaped line break character "\n".
+	Text   string // The poem's text itself. Poem lines are delineated with the digraph "\n".
 }
 
-// poem2json writes the Poem struct to the given JSON file path.
-func poem2json(poem Poem, jsonFile string) error {
-	// TODO Turn this into a method for `Poem`.
+// A ParsedPoem has its length and level of profanity pre-computed.
+type ParsedPoem struct {
+	Title     string // The title of the poem.
+	Author    string // The author of the poem.
+	Text      string // The poem's text itself. Poem lines are delineated with the digraph "\n".
+	Length    int    // The poem's length [in characters].
+	IsProfane bool   // Whether the poem's text contains profane language.
+}
+
+// isProfane signals whether a poem's text contains profane language.
+func isProfane(poem Poem) bool {
+	filteredText := ASCIIRP.ReplaceAllLiteralString(poem.Text, "")
+	return goaway.IsProfane(filteredText)
+}
+
+// NewParsedPoem creates a new parsed poem from a poem in the dataset.
+func NewParsedPoem(poem Poem) ParsedPoem {
+	length := len(poem.Text)
+	isProfane := isProfane(poem)
+	return ParsedPoem{poem.Title, poem.Author, poem.Text, length, isProfane}
+}
+
+// parsedPoem2json writes the ParsedPoem struct to the given JSON file path.
+func parsedPoem2json(parsedPoem ParsedPoem, jsonFile string) error {
 	// Marshal to JSON bytes
-	poemBytes, err := json.Marshal(poem)
+	poemBytes, err := json.Marshal(parsedPoem)
 	if err != nil {
 		log.Fatal(err)
 		return err
@@ -65,32 +86,32 @@ func poem2json(poem Poem, jsonFile string) error {
 	return nil
 }
 
-// json2poem extracts the Poem object from the given JSON file path.
-func json2poem(jsonFile string) (Poem, error) {
+// json2parsedPoem extracts the ParsedPoem object from the given JSON file path.
+func json2parsedPoem(jsonFile string) (ParsedPoem, error) {
 	// Read the file name
-	var poem Poem
+	var parsedPoem ParsedPoem
 	fileBytes, err := os.ReadFile(jsonFile)
 	if err != nil {
 		log.Fatal(err)
-		return poem, err
+		return parsedPoem, err
 	}
 	// parse JSON and return poem
-	err = json.Unmarshal(fileBytes, &poem)
+	err = json.Unmarshal(fileBytes, &parsedPoem)
 	if err != nil {
 		log.Fatal(err)
-		return poem, err
+		return parsedPoem, err
 	}
-	return poem, err
+	return parsedPoem, err
 }
 
 // delineate returns the poem's text with escaped line-break characters replaced with actual line breaks.
-func delineate(poem Poem) string {
-	return strings.Replace(poem.Text, "\\n", "\n", -1)
+func delineate(parsedPoem ParsedPoem) string {
+	return strings.Replace(parsedPoem.Text, "\\n", "\n", -1)
 }
 
 // buildBlackout takes a poem and the blackout regex that matches it, and returns the blacked out poem as a string.
-func buildBlackout(poem Poem, rp *regexp.Regexp) (string, error) {
-	delinatedPoem := delineate(poem)
+func buildBlackout(parsedPoem ParsedPoem, rp *regexp.Regexp) (string, error) {
+	delinatedPoem := delineate(parsedPoem)
 	if !rp.MatchString(delinatedPoem) {
 		err := errors.New("Regex does not match blackout poem")
 		return "", err
@@ -111,7 +132,6 @@ func buildBlackout(poem Poem, rp *regexp.Regexp) (string, error) {
 // msg2regex converts a blackout poem's message into a regex string for searching poems.
 func msg2regex(message string) string {
 	regexString := `(?s)\A`
-
 	for _, msgChar := range strings.Split(message, "") {
 		if unicode.IsSpace(rune(msgChar[0])) {
 			continue
@@ -123,33 +143,29 @@ func msg2regex(message string) string {
 		}
 	}
 	regexString += `(.*?)\z`
+	log.Printf("Message = %s\n", message)
+	log.Printf("Regex = %s\n", regexString)
 	return regexString
 }
 
-// isProfane signals whether a poem's text contains profane language.
-func isProfane(poem Poem) bool {
-	filteredText := ASCIIRP.ReplaceAllLiteralString(poem.Text, "")
-	return goaway.IsProfane(filteredText)
-}
-
-// PrintPoem prints the given (un-blacked-out) poem.
-func PrintPoem(poem Poem) {
+// PrintParsedPoem prints the given (un-blacked-out) poem.
+func PrintParsedPoem(parsedPoem ParsedPoem) {
 	// print title & author
-	fmt.Printf("\"%s\" by %s\n\n", poem.Title, poem.Author)
+	fmt.Printf("\"%s\" by %s\n\n", parsedPoem.Title, parsedPoem.Author)
 	// print lines
-	lines := strings.Split(poem.Text, "\\n")
+	lines := strings.Split(parsedPoem.Text, "\\n")
 	for _, line := range lines {
 		fmt.Println(line)
 	}
 }
 
 // PrintBlackoutPoem prints the given blackout poem from the given poem and hidden message.
-func PrintBlackoutPoem(poem Poem, message string) error {
+func PrintBlackoutPoem(parsedPoem ParsedPoem, message string) error {
 	// convert message to regex
 	regexString := msg2regex(message)
 	rp := regexp.MustCompile(regexString)
 	// build the blackout poem
-	bp, err := buildBlackout(poem, rp)
+	bp, err := buildBlackout(parsedPoem, rp)
 	if err != nil {
 		return err
 	}
@@ -161,6 +177,6 @@ func PrintBlackoutPoem(poem Poem, message string) error {
 	// print the message
 	fmt.Println("\n" + message)
 	// print the title & author
-	fmt.Printf("Excerpt of \"%s\" by %s\n\n", poem.Title, poem.Author)
+	fmt.Printf("Excerpt of \"%s\" by %s\n\n", parsedPoem.Title, parsedPoem.Author)
 	return nil
 }
