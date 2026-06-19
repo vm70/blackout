@@ -1,20 +1,3 @@
-/*
-Package cmd contains the necessary functions to execute the code for `blackout`.
-
-Copyright © 2024 Vincent Mercator <vmercator@protonmail.com>
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-	http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 package cmd
 
 import (
@@ -38,12 +21,12 @@ const poemsURL = "https://huggingface.co/datasets/DanFosing/public-domain-poetry
 var (
 	// SHA256 hash of the poem database JSON.
 	poemsSha256 = [32]byte{0x17, 0x2c, 0xd2, 0xc5, 0xd9, 0x53, 0xc7, 0x02, 0x33, 0x90, 0xa8, 0xd1, 0xf3, 0x37, 0xd0, 0x23, 0xd7, 0xfb, 0xb2, 0xb9, 0x25, 0xdf, 0x0a, 0x66, 0xd0, 0x22, 0x1f, 0x30, 0xc6, 0xad, 0xc3, 0x08}
-	// dataFolder is this program's data folder. On Linux systems, it would be `~/.local/share/blackout`.
-	dataFolder = filepath.Join(xdg.DataHome, "blackout")
+	// cacheFolder is this program's cache folder. On Linux systems, it would be `~/.cache/blackout`.
+	cacheFolder = filepath.Join(xdg.CacheHome, "blackout")
 	// Local path to public domain poetry dataset JSON file.
-	dataFolderJSON = filepath.Join(dataFolder, "poems.json")
+	cacheFolderJSON = filepath.Join(cacheFolder, "poems.json")
 	// Directory where the parsed poem JSONs are stored.
-	dataFolderPoems = filepath.Join(dataFolder, "poems")
+	cacheFolderPoems = filepath.Join(cacheFolder, "poems")
 )
 
 // poemsBytesHashMatches returns an error if the given byte array's SHA256 hash doesn't match the hard-coded one above.
@@ -74,30 +57,36 @@ func readPoemsJSON(poemsJSON string) ([]Poem, error) {
 }
 
 // downloadPoemsJSON downloads the poem JSON file and places it in the given path. If the poems JSON file already exists (from a previous run), then it returns nil.
-func downloadPoemsJSON(poemsPath string) error {
+func downloadPoemsJSON(poemsPath string) (err error) {
 	// Make parent directory if it doesn't exist
 	dir, _ := filepath.Split(poemsPath)
-	mkdirErr := os.MkdirAll(dir, 0o750)
-	if mkdirErr != nil {
-		return mkdirErr
+	err = os.MkdirAll(dir, 0o750)
+	if err != nil {
+		return err
 	}
 	// Check if file exists
-	_, fileErr := os.Stat(poemsPath)
-	if fileErr == nil {
+	_, err = os.Stat(poemsPath)
+	if err == nil {
 		log.Printf("File already exists at %s\n", poemsPath)
 		return nil
 	}
-	if errors.Is(fileErr, os.ErrNotExist) {
+	if errors.Is(err, os.ErrNotExist) {
 		log.Println("Downloading poem dataset")
-		resp, getErr := http.Get(poemsURL)
-		if getErr != nil {
-			return getErr
+		resp, err := http.Get(poemsURL)
+		if err != nil {
+			return err
 		}
-		body, readErr := io.ReadAll(resp.Body)
-		if readErr != nil {
-			return readErr
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return err
 		}
-		defer resp.Body.Close()
+		// Safely close HTTP response
+		defer func() {
+			err = resp.Body.Close()
+		}()
+		if err != nil {
+			return err
+		}
 		hashErr := poemsBytesHashMatches(body)
 		if hashErr != nil {
 			return hashErr
@@ -108,7 +97,7 @@ func downloadPoemsJSON(poemsPath string) error {
 		}
 		return nil
 	}
-	return fileErr
+	return err
 }
 
 // poemFilename returns the poem's file name by its ID.
@@ -140,32 +129,32 @@ func parsePoems(poems []Poem, poemsFolder string) error {
 	return nil
 }
 
-// setupDataFolder sets up this CLI application's data folder.
+// setupDataFolder sets up this CLI application's cache folder.
 func setupDataFolder() error {
-	// Make the data folder if it doesn't already exist
-	_, folderErr := os.Stat(dataFolder)
+	// Make the cache folder if it doesn't already exist
+	_, folderErr := os.Stat(cacheFolder)
 	if os.IsNotExist(folderErr) {
-		log.Printf("Creating data folder %s\n", dataFolder)
-		dirErr := os.Mkdir(dataFolder, 0o750)
+		log.Printf("Creating cache folder %s\n", cacheFolder)
+		dirErr := os.Mkdir(cacheFolder, 0o750)
 		if dirErr != nil {
 			return dirErr
 		}
 	} else {
-		log.Printf("Data folder %s already exists\n", dataFolder)
+		log.Printf("Data folder %s already exists\n", cacheFolder)
 	}
-	// Download the poem database, and put it in the data folder
-	dlErr := downloadPoemsJSON(dataFolderJSON)
+	// Download the poem database, and put it in the cache folder
+	dlErr := downloadPoemsJSON(cacheFolderJSON)
 	if dlErr != nil {
 		return dlErr
 	}
-	// Populate the "poems" folder in the data folder if not already done
-	_, poemsFolderErr := os.Stat(filepath.Join(dataFolder, "poems"))
+	// Populate the "poems" folder in the cache folder if not already done
+	_, poemsFolderErr := os.Stat(filepath.Join(cacheFolder, "poems"))
 	if os.IsNotExist(poemsFolderErr) {
-		poems, readErr := readPoemsJSON(filepath.Join(dataFolder, "poems.json"))
+		poems, readErr := readPoemsJSON(filepath.Join(cacheFolder, "poems.json"))
 		if readErr != nil {
 			return readErr
 		}
-		splitErr := parsePoems(poems, filepath.Join(dataFolder, "poems"))
+		splitErr := parsePoems(poems, filepath.Join(cacheFolder, "poems"))
 		if splitErr != nil {
 			return splitErr
 		}

@@ -15,14 +15,14 @@ func TestCanBlackout(t *testing.T) {
 	badRegexP, _ := regexp.Compile("xxxxxx")
 
 	goodR, err := canBlackout(goodRegexP, nonProfaneParsedPoem)
-	if !(err == nil && goodR == true) {
+	if err != nil || goodR != true {
 		t.Logf("Error: %s", err.Error())
 		t.Logf("Good regex with good length: %t", goodR)
 		t.Fail()
 	}
 	// Check bad regex with good length -> false
 	badR, err := canBlackout(badRegexP, nonProfaneParsedPoem)
-	if !(err == nil && badR == false) {
+	if err != nil || badR != false {
 		t.Logf("Error: %s", err.Error())
 		t.Logf("Bad regex with good length: %t", badR)
 		t.Fail()
@@ -34,22 +34,22 @@ func TestSearchingIsDeterministic(t *testing.T) {
 	blackoutRegex := regexp.MustCompile(regexpString)
 	setupErr := setupDataFolder()
 	if setupErr != nil {
-		t.Fatalf(setupErr.Error())
+		t.Fatal(setupErr.Error())
 	}
 	dir, dirErr := os.ReadDir("testdata/poems_folder")
 	if dirErr != nil {
-		t.Fatalf(dirErr.Error())
+		t.Fatal(dirErr.Error())
 	}
 	for nThreads := 1; nThreads < 10; nThreads++ {
-		sp := SearchParams{dataFolderPoems, len(dir), nThreads, blackoutRegex, MaxLength, Profanities}
+		sp := SearchParams{cacheFolderPoems, len(dir), nThreads, blackoutRegex, maxLength, profanities}
 		poemID, searchErr := searchPoemsFolder(sp)
 		if searchErr != nil {
-			t.Fatalf(searchErr.Error())
+			t.Fatal(searchErr.Error())
 		}
 		for i := 0; i < 10; i++ {
 			loopPoemID, searchErr := searchPoemsFolder(sp)
 			if searchErr != nil {
-				t.Fatalf(searchErr.Error())
+				t.Fatal(searchErr.Error())
 			}
 			if loopPoemID != poemID {
 				t.Fatalf("%d != %d", loopPoemID, poemID)

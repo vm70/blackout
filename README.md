@@ -92,6 +92,15 @@ Flags:
 Contributions are welcome. If you find a bug, please report it through
 Blackout's [Issues page][issues] on its GitHub repository.
 
+### Testing
+
+Running the following command will use Go's built-in testing framework to run
+the tests for this repository.
+
+```bash
+go test -v ./...
+```
+
 ## License
 
 The poems downloaded and stored by this program are in the public domain, and
