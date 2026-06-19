@@ -40,12 +40,12 @@ const examples = `blackout --help
 blackout 'lorem ipsum' --max-length 800`
 
 var (
-	Verbose       bool // Whether to print verbose results.
-	MaxLength     int  // Maximum poem length to black out.
-	PrintOriginal bool // Whether to print the original poem before blacking it out.
-	Profanities   bool // Whether to filter out poems with offensive words while searching.
-	Force         bool // Whether to re-download and re-parse the poems dataset.
-	NThreads      int  // Number of threads.
+	verbose       bool // Whether to print verbose results.
+	maxLength     int  // Maximum poem length to black out.
+	printOriginal bool // Whether to print the original poem before blacking it out.
+	profanities   bool // Whether to filter out poems with offensive words while searching.
+	force         bool // Whether to re-download and re-parse the poems dataset.
+	nThreads      int  // Number of threads.
 )
 
 // rootCmd represents the base command when called without any sub-commands.
@@ -70,38 +70,42 @@ func Execute() {
 
 // init sets up the flags of the CLI application.
 func init() {
-	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "V", false, "verbose output")
-	rootCmd.PersistentFlags().IntVarP(&MaxLength, "max-length", "l", 400, "maximum poem length")
-	rootCmd.PersistentFlags().BoolVarP(&PrintOriginal, "print-original", "o", false, "print original poem before blacking out")
-	rootCmd.PersistentFlags().BoolVarP(&Profanities, "allow-profanities", "p", false, "allow blacking out poems with profanities")
-	rootCmd.PersistentFlags().BoolVarP(&Force, "force", "f", false, "force re-downloading the public domain poetry dataset")
-	rootCmd.PersistentFlags().IntVarP(&NThreads, "threads", "t", runtime.NumCPU(), "how many threads to use for poem searching")
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "V", false, "verbose output")
+	rootCmd.PersistentFlags().IntVarP(&maxLength, "max-length", "l", 400, "maximum poem length")
+	rootCmd.PersistentFlags().BoolVarP(&printOriginal, "print-original", "o", false, "print original poem before blacking out")
+	rootCmd.PersistentFlags().BoolVarP(&profanities, "allow-profanities", "p", false, "allow blacking out poems with profanities")
+	rootCmd.PersistentFlags().BoolVarP(&force, "force", "f", false, "force re-downloading the public domain poetry dataset")
+	rootCmd.PersistentFlags().IntVarP(&nThreads, "threads", "t", runtime.NumCPU(), "how many threads to use for poem searching")
 }
 
 // run runs the CLI application.
 func run(cmd *cobra.Command, args []string) {
 	// Parse `Verbose` flag
-	if !Verbose {
+	if !verbose {
 		log.SetOutput(io.Discard)
 	} else {
 		log.SetOutput(os.Stdout)
 	}
 	// Parse `Force` flag
-	if Force {
-		os.RemoveAll(dataFolder)
+	if force {
+		removeErr := os.RemoveAll(dataFolder)
+		if removeErr != nil {
+			fmt.Printf("Error removing poem data folder at `%s`", dataFolder)
+			log.Fatal(removeErr)
+		}
 	}
 	log.Printf("Running command %s\n", cmd.Name())
 	regexpString := msg2regex(args[0])
 	blackoutRegex := regexp.MustCompile(regexpString)
 	setupErr := setupDataFolder()
 	if setupErr != nil {
-		log.Fatalf(setupErr.Error())
+		log.Fatal(setupErr.Error())
 	}
 	dir, dirErr := os.ReadDir(dataFolderPoems)
 	if dirErr != nil {
-		log.Fatalf(dirErr.Error())
+		log.Fatal(dirErr.Error())
 	}
-	sp := SearchParams{dataFolderPoems, len(dir), NThreads, blackoutRegex, MaxLength, Profanities}
+	sp := SearchParams{dataFolderPoems, len(dir), nThreads, blackoutRegex, maxLength, profanities}
 	log.Printf("# poems\t: %d", sp.NPoems)
 	log.Printf("# threads\t: %d", sp.NThreads)
 	log.Printf("max length [chars]\t: %d", sp.MaxLength)
@@ -115,10 +119,10 @@ func run(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if Verbose {
+	if verbose {
 		time.Sleep(1 * time.Second)
 	}
-	if PrintOriginal {
+	if printOriginal {
 		PrintParsedPoem(poem)
 		print("\n")
 	}

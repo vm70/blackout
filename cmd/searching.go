@@ -65,7 +65,7 @@ func searchPoemsFolder(sp SearchParams) (int, error) {
 	}
 	// If all goroutines fail, then the smallest poem ID is invalid
 	if smallestPoemID == searchFailure {
-		searchErr := errors.New("Failed to find a blackout poem")
+		searchErr := errors.New("failed to find a blackout poem")
 		return searchFailure, searchErr
 	}
 	return smallestPoemID, nil

@@ -36,7 +36,7 @@ const regexEscapes = `.+*?()|[]{}^$`
 var (
 	// blackoutRP is the regular expression pointer that matches every non-whitespace charater for blacking out.
 	blackoutRP = regexp.MustCompile(`[^\t\f\r\n\ ]`)
-	// Regular expression pointer that matches every non-ASCII character.
+	// ASCIIRP is the Regular expression pointer that matches every non-ASCII character.
 	ASCIIRP = regexp.MustCompile("[[:^ascii:]]")
 )
 
@@ -106,14 +106,14 @@ func json2parsedPoem(jsonFile string) (ParsedPoem, error) {
 
 // delineate returns the poem's text with escaped line-break characters replaced with actual line breaks.
 func delineate(parsedPoem ParsedPoem) string {
-	return strings.Replace(parsedPoem.Text, "\\n", "\n", -1)
+	return strings.ReplaceAll(parsedPoem.Text, "\\n", "\n")
 }
 
 // buildBlackout takes a poem and the blackout regex that matches it, and returns the blacked out poem as a string.
 func buildBlackout(parsedPoem ParsedPoem, rp *regexp.Regexp) (string, error) {
 	delinatedPoem := delineate(parsedPoem)
 	if !rp.MatchString(delinatedPoem) {
-		err := errors.New("Regex does not match blackout poem")
+		err := errors.New("regex does not match blackout poem")
 		return "", err
 	}
 	groups := rp.FindStringSubmatch(delinatedPoem)

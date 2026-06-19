@@ -74,30 +74,36 @@ func readPoemsJSON(poemsJSON string) ([]Poem, error) {
 }
 
 // downloadPoemsJSON downloads the poem JSON file and places it in the given path. If the poems JSON file already exists (from a previous run), then it returns nil.
-func downloadPoemsJSON(poemsPath string) error {
+func downloadPoemsJSON(poemsPath string) (err error) {
 	// Make parent directory if it doesn't exist
 	dir, _ := filepath.Split(poemsPath)
-	mkdirErr := os.MkdirAll(dir, 0o750)
-	if mkdirErr != nil {
-		return mkdirErr
+	err = os.MkdirAll(dir, 0o750)
+	if err != nil {
+		return err
 	}
 	// Check if file exists
-	_, fileErr := os.Stat(poemsPath)
-	if fileErr == nil {
+	_, err = os.Stat(poemsPath)
+	if err == nil {
 		log.Printf("File already exists at %s\n", poemsPath)
 		return nil
 	}
-	if errors.Is(fileErr, os.ErrNotExist) {
+	if errors.Is(err, os.ErrNotExist) {
 		log.Println("Downloading poem dataset")
-		resp, getErr := http.Get(poemsURL)
-		if getErr != nil {
-			return getErr
+		resp, err := http.Get(poemsURL)
+		if err != nil {
+			return err
 		}
-		body, readErr := io.ReadAll(resp.Body)
-		if readErr != nil {
-			return readErr
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return err
 		}
-		defer resp.Body.Close()
+		// Safely close HTTP response
+		defer func() {
+			err = resp.Body.Close()
+		}()
+		if err != nil {
+			return err
+		}
 		hashErr := poemsBytesHashMatches(body)
 		if hashErr != nil {
 			return hashErr
@@ -108,7 +114,7 @@ func downloadPoemsJSON(poemsPath string) error {
 		}
 		return nil
 	}
-	return fileErr
+	return err
 }
 
 // poemFilename returns the poem's file name by its ID.
