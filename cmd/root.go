@@ -1,7 +1,7 @@
 /*
 Package cmd contains the necessary functions to execute the code for `blackout`.
 
-Copyright © 2024 Vincent Mercator <vmercator@protonmail.com>
+Copyright © 2024-2026 Vincent Mercator <vmercator@protonmail.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -40,12 +40,12 @@ const examples = `blackout --help
 blackout 'lorem ipsum' --max-length 800`
 
 var (
-	verbose       bool // Whether to print verbose results.
-	maxLength     int  // Maximum poem length to black out.
-	printOriginal bool // Whether to print the original poem before blacking it out.
-	profanities   bool // Whether to filter out poems with offensive words while searching.
-	force         bool // Whether to re-download and re-parse the poems dataset.
-	nThreads      int  // Number of threads.
+	verbose         bool // Whether to print verbose results.
+	maxLength       int  // Maximum poem length to black out.
+	printOriginal   bool // Whether to print the original poem before blacking it out.
+	profanities     bool // Whether to filter out poems with offensive words while searching.
+	forceRedownload bool // Whether to re-download and re-parse the poems dataset.
+	nThreads        int  // Number of threads.
 )
 
 // rootCmd represents the base command when called without any sub-commands.
@@ -74,7 +74,7 @@ func init() {
 	rootCmd.PersistentFlags().IntVarP(&maxLength, "max-length", "l", 400, "maximum poem length")
 	rootCmd.PersistentFlags().BoolVarP(&printOriginal, "print-original", "o", false, "print original poem before blacking out")
 	rootCmd.PersistentFlags().BoolVarP(&profanities, "allow-profanities", "p", false, "allow blacking out poems with profanities")
-	rootCmd.PersistentFlags().BoolVarP(&force, "force", "f", false, "force re-downloading the public domain poetry dataset")
+	rootCmd.PersistentFlags().BoolVarP(&forceRedownload, "force-redownload", "f", false, "force re-downloading the public domain poetry dataset")
 	rootCmd.PersistentFlags().IntVarP(&nThreads, "threads", "t", runtime.NumCPU(), "how many threads to use for poem searching")
 }
 
@@ -87,7 +87,7 @@ func run(cmd *cobra.Command, args []string) {
 		log.SetOutput(os.Stdout)
 	}
 	// Parse `Force` flag
-	if force {
+	if forceRedownload {
 		removeErr := os.RemoveAll(cacheFolder)
 		if removeErr != nil {
 			fmt.Printf("Error removing poem data folder at `%s`", cacheFolder)
