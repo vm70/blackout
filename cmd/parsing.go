@@ -129,12 +129,12 @@ func parsePoems(poems []Poem, poemsFolder string) error {
 	return nil
 }
 
-// setupDataFolder sets up this CLI application's data folder.
+// setupDataFolder sets up this CLI application's cache folder.
 func setupDataFolder() error {
-	// Make the data folder if it doesn't already exist
+	// Make the cache folder if it doesn't already exist
 	_, folderErr := os.Stat(cacheFolder)
 	if os.IsNotExist(folderErr) {
-		log.Printf("Creating data folder %s\n", cacheFolder)
+		log.Printf("Creating cache folder %s\n", cacheFolder)
 		dirErr := os.Mkdir(cacheFolder, 0o750)
 		if dirErr != nil {
 			return dirErr
@@ -142,12 +142,12 @@ func setupDataFolder() error {
 	} else {
 		log.Printf("Data folder %s already exists\n", cacheFolder)
 	}
-	// Download the poem database, and put it in the data folder
+	// Download the poem database, and put it in the cache folder
 	dlErr := downloadPoemsJSON(cacheFolderJSON)
 	if dlErr != nil {
 		return dlErr
 	}
-	// Populate the "poems" folder in the data folder if not already done
+	// Populate the "poems" folder in the cache folder if not already done
 	_, poemsFolderErr := os.Stat(filepath.Join(cacheFolder, "poems"))
 	if os.IsNotExist(poemsFolderErr) {
 		poems, readErr := readPoemsJSON(filepath.Join(cacheFolder, "poems.json"))
