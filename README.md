@@ -98,7 +98,7 @@ Running the following command will use Go's built-in testing framework to run
 the tests for this repository.
 
 ```bash
-go test ./cmd/
+go test -v ./...
 ```
 
 ## License
