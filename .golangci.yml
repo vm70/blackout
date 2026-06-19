@@ -1,20 +1,19 @@
+version: "2"
 linters:
   enable:
-    # enabled by default
     - errcheck
-    - gosimple
     - govet
     - ineffassign
     - staticcheck
     - unused
-    # disabled by default
     - bodyclose
-    - canonicalheader
     - funlen
     - gochecksumtype
     - goconst
     - godot
-    - gofumpt
     - nilerr
     - revive
     - sloglint
+formatters:
+  enable:
+    - gofumpt
