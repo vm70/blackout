@@ -88,9 +88,9 @@ func run(cmd *cobra.Command, args []string) {
 	}
 	// Parse `Force` flag
 	if force {
-		removeErr := os.RemoveAll(dataFolder)
+		removeErr := os.RemoveAll(cacheFolder)
 		if removeErr != nil {
-			fmt.Printf("Error removing poem data folder at `%s`", dataFolder)
+			fmt.Printf("Error removing poem data folder at `%s`", cacheFolder)
 			log.Fatal(removeErr)
 		}
 	}
@@ -101,11 +101,11 @@ func run(cmd *cobra.Command, args []string) {
 	if setupErr != nil {
 		log.Fatal(setupErr.Error())
 	}
-	dir, dirErr := os.ReadDir(dataFolderPoems)
+	dir, dirErr := os.ReadDir(cacheFolderPoems)
 	if dirErr != nil {
 		log.Fatal(dirErr.Error())
 	}
-	sp := SearchParams{dataFolderPoems, len(dir), nThreads, blackoutRegex, maxLength, profanities}
+	sp := SearchParams{cacheFolderPoems, len(dir), nThreads, blackoutRegex, maxLength, profanities}
 	log.Printf("# poems\t: %d", sp.NPoems)
 	log.Printf("# threads\t: %d", sp.NThreads)
 	log.Printf("max length [chars]\t: %d", sp.MaxLength)
@@ -115,7 +115,7 @@ func run(cmd *cobra.Command, args []string) {
 		fmt.Printf("Could not find a blackout poem for message `%s`\n", args[0])
 		log.Fatal(err)
 	}
-	poem, err := json2parsedPoem(filepath.Join(dataFolderPoems, poemFilename(poemID)))
+	poem, err := json2parsedPoem(filepath.Join(cacheFolderPoems, poemFilename(poemID)))
 	if err != nil {
 		log.Fatal(err)
 	}

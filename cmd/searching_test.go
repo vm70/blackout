@@ -41,7 +41,7 @@ func TestSearchingIsDeterministic(t *testing.T) {
 		t.Fatal(dirErr.Error())
 	}
 	for nThreads := 1; nThreads < 10; nThreads++ {
-		sp := SearchParams{dataFolderPoems, len(dir), nThreads, blackoutRegex, maxLength, profanities}
+		sp := SearchParams{cacheFolderPoems, len(dir), nThreads, blackoutRegex, maxLength, profanities}
 		poemID, searchErr := searchPoemsFolder(sp)
 		if searchErr != nil {
 			t.Fatal(searchErr.Error())
